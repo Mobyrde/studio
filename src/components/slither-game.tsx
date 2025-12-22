@@ -39,17 +39,18 @@ const FOOD_COUNT = 200;
 const PLAYER_SPEED = 1.5;
 const BOOST_SPEED = 2.5;
 const BOOST_SHRINK_RATE = 5; // Decrease length every 5 frames while boosting
+const STARTING_SNAKE_LENGTH = 7;
 
 const SlitherGame = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
-  const [snakeLength, setSnakeLength] = useState(1);
+  const [snakeLength, setSnakeLength] = useState(STARTING_SNAKE_LENGTH);
   const [highScore, setHighScore] = useState(0);
   const [isReady, setIsReady] = useState(false);
   
   const gameStateRef = useRef<GameState>({
-    snake: [{ x: WORLD_SIZE / 2, y: WORLD_SIZE / 2 }],
+    snake: Array.from({ length: STARTING_SNAKE_LENGTH }, (_, i) => ({ x: WORLD_SIZE / 2 - i * 10, y: WORLD_SIZE / 2 })),
     direction: { x: 0, y: 0 },
     food: [],
     bots: [],
@@ -111,7 +112,7 @@ const SlitherGame = () => {
 
     const initGame = () => {
       gameStateRef.current = {
-        snake: [{ x: WORLD_SIZE / 2, y: WORLD_SIZE / 2 }],
+        snake: Array.from({ length: STARTING_SNAKE_LENGTH }, (_, i) => ({ x: WORLD_SIZE / 2 - i * 10, y: WORLD_SIZE / 2 })),
         direction: { x: 0, y: 0 },
         food: generateFood(FOOD_COUNT),
         bots: Array(BOT_COUNT).fill(null).map(generateBot),
@@ -121,7 +122,7 @@ const SlitherGame = () => {
         boosting: false,
         boostShrinkCounter: 0,
       };
-      setSnakeLength(1);
+      setSnakeLength(STARTING_SNAKE_LENGTH);
     };
 
     initGame();
@@ -381,7 +382,7 @@ const SlitherGame = () => {
   const restartGame = () => {
     setGameOver(false);
     setScore(0);
-    setSnakeLength(1);
+    setSnakeLength(STARTING_SNAKE_LENGTH);
   };
 
   if (!isReady) {
