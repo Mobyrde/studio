@@ -38,7 +38,7 @@ const FOOD_RADIUS = 5;
 const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
 const PLAYER_SPEED = 1.8;
-const BOOST_SPEED = 3.0;
+const BOOST_SPEED = 3.6;
 const BOOST_SHRINK_RATE = 5;
 const STARTING_SNAKE_LENGTH = 10;
 const TURN_SPEED = 0.075;
@@ -467,3 +467,5 @@ const SlitherGame = () => {
 };
 
 export default SlitherGame;
+
+    
