@@ -345,17 +345,29 @@ const SlitherGame = () => {
         ctx.shadowBlur = 0;
         
         if (i === 0) {
-          const eyeAngle = Math.atan2(state.direction.y, state.direction.x);
-          const eyeRadius = Math.max(1, playerRadius * 0.25);
-          const eyeDist = playerRadius * 0.5;
-          
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.arc(segment.x + Math.cos(eyeAngle + Math.PI/4) * eyeDist, segment.y + Math.sin(eyeAngle + Math.PI/4) * eyeDist, eyeRadius, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(segment.x + Math.cos(eyeAngle - Math.PI/4) * eyeDist, segment.y + Math.sin(eyeAngle - Math.PI/4) * eyeDist, eyeRadius, 0, Math.PI * 2);
-          ctx.fill();
+            const eyeAngle = Math.atan2(state.direction.y, state.direction.x);
+            const eyeRadius = Math.max(1, playerRadius * 0.25);
+            const eyeDist = playerRadius * 0.6;
+            
+            // Eye whites
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(segment.x + Math.cos(eyeAngle + Math.PI/4) * eyeDist, segment.y + Math.sin(eyeAngle + Math.PI/4) * eyeDist, eyeRadius * 1.2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(segment.x + Math.cos(eyeAngle - Math.PI/4) * eyeDist, segment.y + Math.sin(eyeAngle - Math.PI/4) * eyeDist, eyeRadius * 1.2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Pupils
+            const pupilRadius = eyeRadius * 0.5;
+            const pupilDist = eyeRadius * 0.3;
+            ctx.fillStyle = 'black';
+            ctx.beginPath();
+            ctx.arc(segment.x + Math.cos(eyeAngle + Math.PI/4) * eyeDist + Math.cos(eyeAngle) * pupilDist, segment.y + Math.sin(eyeAngle + Math.PI/4) * eyeDist + Math.sin(eyeAngle) * pupilDist, pupilRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(segment.x + Math.cos(eyeAngle - Math.PI/4) * eyeDist + Math.cos(eyeAngle) * pupilDist, segment.y + Math.sin(eyeAngle - Math.PI/4) * eyeDist + Math.sin(eyeAngle) * pupilDist, pupilRadius, 0, Math.PI * 2);
+            ctx.fill();
         }
       });
 
