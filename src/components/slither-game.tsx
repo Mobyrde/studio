@@ -20,6 +20,7 @@ type Bot = {
 type GameState = {
   snake: Snake;
   direction: Position;
+  targetDirection: Position;
   food: Food[];
   bots: Bot[];
   camera: Position;
@@ -38,8 +39,9 @@ const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
 const PLAYER_SPEED = 1.5;
 const BOOST_SPEED = 2.5;
-const BOOST_SHRINK_RATE = 5; // Decrease length every 5 frames while boosting
+const BOOST_SHRINK_RATE = 5;
 const STARTING_SNAKE_LENGTH = 10;
+const TURN_SPEED = 0.075;
 
 const SlitherGame = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -51,7 +53,8 @@ const SlitherGame = () => {
   
   const gameStateRef = useRef<GameState>({
     snake: Array.from({ length: STARTING_SNAKE_LENGTH }, (_, i) => ({ x: WORLD_SIZE / 2 - i * 10, y: WORLD_SIZE / 2 })),
-    direction: { x: 0, y: 0 },
+    direction: { x: 1, y: 0 },
+    targetDirection: { x: 1, y: 0 },
     food: [],
     bots: [],
     camera: { x: 0, y: 0 },
@@ -113,7 +116,8 @@ const SlitherGame = () => {
     const initGame = () => {
       gameStateRef.current = {
         snake: Array.from({ length: STARTING_SNAKE_LENGTH }, (_, i) => ({ x: WORLD_SIZE / 2 - i * 10, y: WORLD_SIZE / 2 })),
-        direction: { x: 0, y: 0 },
+        direction: { x: 1, y: 0 },
+        targetDirection: { x: 1, y: 0 },
         food: generateFood(FOOD_COUNT),
         bots: Array(BOT_COUNT).fill(null).map(generateBot),
         camera: { x: (WORLD_SIZE / 2) - canvas.width / 2, y: (WORLD_SIZE / 2) - canvas.height / 2 },
@@ -140,7 +144,7 @@ const SlitherGame = () => {
       const length = Math.sqrt(dx * dx + dy * dy);
       
       if (length > 0) {
-        gameStateRef.current.direction = { x: dx / length, y: dy / length };
+        gameStateRef.current.targetDirection = { x: dx / length, y: dy / length };
       }
     };
     
@@ -214,6 +218,15 @@ const SlitherGame = () => {
       
       // Update Player
       if (state.direction.x !== 0 || state.direction.y !== 0) {
+        // Smoothly update direction
+        state.direction.x += (state.targetDirection.x - state.direction.x) * TURN_SPEED;
+        state.direction.y += (state.targetDirection.y - state.direction.y) * TURN_SPEED;
+        const dirLength = Math.sqrt(state.direction.x**2 + state.direction.y**2);
+        if (dirLength > 0) {
+            state.direction.x /= dirLength;
+            state.direction.y /= dirLength;
+        }
+
         const head = state.snake[0];
         const newHead = {
           x: head.x + state.direction.x * state.speed,
