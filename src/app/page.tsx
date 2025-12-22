@@ -47,13 +47,29 @@ export default function Home() {
           <h1 className="text-3xl md:text-5xl font-bold tracking-widest my-8">
             NEON SLITHER
           </h1>
-          <Button
-            onClick={() => setGameStarted(true)}
-            variant="outline"
-            className="bg-transparent text-green-400 border-green-400 hover:bg-green-400 hover:text-black transition-all duration-300 text-lg md:text-xl px-8 py-6"
-          >
-            &gt; Start Game
-          </Button>
+          <div className="flex flex-col md:flex-row gap-4 justify-center">
+            <Button
+              onClick={() => setGameStarted(true)}
+              variant="outline"
+              className="bg-transparent text-green-400 border-green-400 hover:bg-green-400 hover:text-black transition-all duration-300 text-lg md:text-xl px-8 py-6"
+            >
+              &gt; $5 Lobby
+            </Button>
+            <Button
+              onClick={() => setGameStarted(true)}
+              variant="outline"
+              className="bg-transparent text-green-400 border-green-400 hover:bg-green-400 hover:text-black transition-all duration-300 text-lg md:text-xl px-8 py-6"
+            >
+              &gt; $10 Lobby
+            </Button>
+            <Button
+              onClick={() => setGameStarted(true)}
+              variant="outline"
+              className="bg-transparent text-green-400 border-green-400 hover:bg-green-400 hover:text-black transition-all duration-300 text-lg md:text-xl px-8 py-6"
+            >
+              &gt; $20 Lobby
+            </Button>
+          </div>
         </div>
       </main>
     );
