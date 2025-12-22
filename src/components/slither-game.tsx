@@ -25,6 +25,7 @@ type GameState = {
   camera: Position;
   speed: number;
   growing: number;
+  boosting: boolean;
 };
 
 // Constants
@@ -34,6 +35,7 @@ const FOOD_RADIUS = 5;
 const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
 const PLAYER_SPEED = 3;
+const BOOST_SPEED = 4.5;
 
 const SlitherGame = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -51,6 +53,7 @@ const SlitherGame = () => {
     camera: { x: 0, y: 0 },
     speed: PLAYER_SPEED,
     growing: 0,
+    boosting: false,
   });
   const foodColorsRef = useRef<string[]>([]);
 
@@ -111,6 +114,7 @@ const SlitherGame = () => {
         camera: { x: (WORLD_SIZE / 2) - canvas.width / 2, y: (WORLD_SIZE / 2) - canvas.height / 2 },
         speed: PLAYER_SPEED,
         growing: 0,
+        boosting: false,
       };
       setSnakeLength(1);
     };
@@ -133,8 +137,22 @@ const SlitherGame = () => {
         gameStateRef.current.direction = { x: dx / length, y: dy / length };
       }
     };
+    
+    const handleMouseDown = (e: MouseEvent) => {
+        if (e.button === 0) {
+            gameStateRef.current.boosting = true;
+        }
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+        if (e.button === 0) {
+            gameStateRef.current.boosting = false;
+        }
+    };
 
     canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mouseup', handleMouseUp);
 
     const checkCollision = (pos1: Position, pos2: Position, dist: number) => {
       const dx = pos1.x - pos2.x;
@@ -168,6 +186,15 @@ const SlitherGame = () => {
     const gameLoop = () => {
       if (gameOver) return;
       const state = gameStateRef.current;
+
+      // Handle boosting
+      if (state.boosting && state.snake.length > 2) {
+          state.speed = BOOST_SPEED;
+          state.snake.pop();
+          setSnakeLength(state.snake.length);
+      } else {
+          state.speed = PLAYER_SPEED;
+      }
       
       // Update Player
       if (state.direction.x !== 0 || state.direction.y !== 0) {
@@ -293,6 +320,8 @@ const SlitherGame = () => {
 
     return () => {
       canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      canvas.removeEventListener('mouseup', handleMouseUp);
       cancelAnimationFrame(animationId);
     };
   }, [gameOver, isReady]);
@@ -358,6 +387,7 @@ const SlitherGame = () => {
       
       <div className="mt-4 text-center text-muted-foreground">
         <p>Move your mouse to control the snake</p>
+        <p>Hold left-click to boost!</p>
         <p className="text-sm">Eat the colorful dots to grow longer!</p>
       </div>
     </div>
