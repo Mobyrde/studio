@@ -20,13 +20,13 @@ const AsciiArt = () => (
 );
 
 export default function Home() {
-  const [gameStarted, setGameStarted] = useState(false);
+  const [selectedLobby, setSelectedLobby] = useState<number | null>(null);
 
   const handleGameOver = () => {
-    setGameStarted(false);
+    setSelectedLobby(null);
   };
 
-  if (!gameStarted) {
+  if (!selectedLobby) {
     return (
       <main 
         className="flex flex-col items-center justify-center min-h-screen p-4 bg-black text-green-400 font-mono"
@@ -49,21 +49,21 @@ export default function Home() {
           </h1>
           <div className="flex flex-col md:flex-row gap-4 justify-center">
             <Button
-              onClick={() => setGameStarted(true)}
+              onClick={() => setSelectedLobby(5)}
               variant="outline"
               className="bg-transparent text-green-400 border-green-400 hover:bg-green-400 hover:text-black transition-all duration-300 text-lg md:text-xl px-8 py-6"
             >
               &gt; $5 Lobby
             </Button>
             <Button
-              onClick={() => setGameStarted(true)}
+              onClick={() => setSelectedLobby(10)}
               variant="outline"
               className="bg-transparent text-green-400 border-green-400 hover:bg-green-400 hover:text-black transition-all duration-300 text-lg md:text-xl px-8 py-6"
             >
               &gt; $10 Lobby
             </Button>
             <Button
-              onClick={() => setGameStarted(true)}
+              onClick={() => setSelectedLobby(20)}
               variant="outline"
               className="bg-transparent text-green-400 border-green-400 hover:bg-green-400 hover:text-black transition-all duration-300 text-lg md:text-xl px-8 py-6"
             >
@@ -80,7 +80,7 @@ export default function Home() {
       <h1 className="text-5xl md:text-6xl font-bold font-headline text-primary mb-4 tracking-widest animate-pulse" style={{textShadow: '0 0 10px hsl(var(--primary)), 0 0 20px hsl(var(--primary))'}}>
         NEON SLITHER
       </h1>
-      <SlitherGame onGameOver={handleGameOver} />
+      <SlitherGame onGameOver={handleGameOver} lobby={selectedLobby} />
     </main>
   );
 }

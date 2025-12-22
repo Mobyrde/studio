@@ -16,6 +16,7 @@ type Bot = {
   speed: number;
   color: string;
   turnTimer: number;
+  balance: number;
 };
 type GameState = {
   snake: Snake;
@@ -38,19 +39,21 @@ const FOOD_RADIUS = 5;
 const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
 const PLAYER_SPEED = 2.16;
-const BOOST_SPEED = 4.32;
+const BOOST_SPEED = 5.184;
 const BOOST_SHRINK_RATE = 5;
 const STARTING_SNAKE_LENGTH = 10;
 const TURN_SPEED = 0.075;
 
 interface SlitherGameProps {
   onGameOver: () => void;
+  lobby: number;
 }
 
-const SlitherGame = ({ onGameOver }: SlitherGameProps) => {
+const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
+  const [balance, setBalance] = useState(lobby);
   const [snakeLength, setSnakeLength] = useState(STARTING_SNAKE_LENGTH);
   const [highScore, setHighScore] = useState(0);
   const [isReady, setIsReady] = useState(false);
@@ -120,6 +123,7 @@ const SlitherGame = ({ onGameOver }: SlitherGameProps) => {
         speed: 2 + Math.random(),
         color: `hsl(${Math.random() * 360}, 60%, 50%)`,
         turnTimer: 0,
+        balance: lobby,
       };
     };
 
@@ -137,6 +141,7 @@ const SlitherGame = ({ onGameOver }: SlitherGameProps) => {
         boostShrinkCounter: 0,
       };
       setSnakeLength(STARTING_SNAKE_LENGTH);
+      setBalance(lobby);
     };
 
     initGame();
@@ -406,7 +411,7 @@ const SlitherGame = ({ onGameOver }: SlitherGameProps) => {
       canvas.removeEventListener('mouseup', handleMouseUp);
       cancelAnimationFrame(animationId);
     };
-  }, [gameOver, isReady]);
+  }, [gameOver, isReady, lobby]);
 
   useEffect(() => {
     if (score > highScore) {
@@ -418,6 +423,7 @@ const SlitherGame = ({ onGameOver }: SlitherGameProps) => {
     setGameOver(false);
     setScore(0);
     setSnakeLength(STARTING_SNAKE_LENGTH);
+    setBalance(lobby);
   };
 
   if (!isReady) {
@@ -436,8 +442,8 @@ const SlitherGame = ({ onGameOver }: SlitherGameProps) => {
     <div className="flex flex-col items-center justify-center">
       <div className="mb-4 flex flex-wrap justify-center gap-4 md:gap-8 text-foreground font-headline">
         <div className="text-xl">Length: <span className="font-bold text-primary">{snakeLength}</span></div>
-        <div className="text-xl">Score: <span className="font-bold text-yellow-400">{score}</span></div>
-        <div className="text-xl">High Score: <span className="font-bold text-purple-400">{highScore}</span></div>
+        <div className="text-xl">Balance: <span className="font-bold text-yellow-400">${balance.toFixed(2)}</span></div>
+        <div className="text-xl">Score: <span className="font-bold text-purple-400">{score}</span></div>
       </div>
       
       <div className="relative">
