@@ -31,7 +31,8 @@ type GameState = {
 
 // Constants
 const WORLD_SIZE = 3000;
-const SNAKE_RADIUS = 8;
+const BASE_SNAKE_RADIUS = 7;
+const BOT_SNAKE_RADIUS = 8;
 const FOOD_RADIUS = 5;
 const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
@@ -187,9 +188,14 @@ const SlitherGame = () => {
       bot.body.pop();
     };
 
+    const getPlayerRadius = (length: number) => {
+        return BASE_SNAKE_RADIUS + Math.log10(length) * 2;
+    }
+
     const gameLoop = () => {
       if (gameOver) return;
       const state = gameStateRef.current;
+      const playerRadius = getPlayerRadius(state.snake.length);
 
       // Handle boosting
       if (state.boosting && state.snake.length > 2) {
@@ -221,7 +227,7 @@ const SlitherGame = () => {
         state.snake.unshift(newHead);
 
         state.food = state.food.filter(f => {
-          if (checkCollision(newHead, f, SNAKE_RADIUS + FOOD_RADIUS)) {
+          if (checkCollision(newHead, f, playerRadius + FOOD_RADIUS)) {
             state.growing += 1;
             setScore(s => s + 1);
             return false;
@@ -285,7 +291,7 @@ const SlitherGame = () => {
         bot.body.forEach((segment, i) => {
           ctx.fillStyle = bot.color;
           ctx.globalAlpha = 1 - (i / bot.body.length) * 0.5;
-          ctx.beginPath(); ctx.arc(segment.x, segment.y, SNAKE_RADIUS, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(segment.x, segment.y, BOT_SNAKE_RADIUS, 0, Math.PI * 2); ctx.fill();
         });
       });
       ctx.globalAlpha = 1;
@@ -293,7 +299,8 @@ const SlitherGame = () => {
       // Draw Player
       const pulse = Math.abs(Math.sin(Date.now() / 300));
       state.snake.forEach((segment, i) => {
-        const gradient = ctx.createRadialGradient(segment.x, segment.y, 0, segment.x, segment.y, SNAKE_RADIUS);
+        const segmentRadius = playerRadius * (1 - (i / (state.snake.length * 2)));
+        const gradient = ctx.createRadialGradient(segment.x, segment.y, 0, segment.x, segment.y, segmentRadius);
         gradient.addColorStop(0, 'hsl(267, 100%, 70%)');
         gradient.addColorStop(1, 'hsl(267, 100%, 50%)');
         ctx.fillStyle = gradient;
@@ -303,20 +310,20 @@ const SlitherGame = () => {
           ctx.shadowBlur = 10 + pulse * 10;
         }
         
-        ctx.beginPath(); ctx.arc(segment.x, segment.y, SNAKE_RADIUS, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(segment.x, segment.y, segmentRadius, 0, Math.PI * 2); ctx.fill();
         ctx.shadowBlur = 0;
         
         if (i === 0) {
-          const eyeOffsetX = state.direction.x * 2;
-          const eyeOffsetY = state.direction.y * 2;
           const eyeAngle = Math.atan2(state.direction.y, state.direction.x);
+          const eyeRadius = Math.max(1, playerRadius * 0.25);
+          const eyeDist = playerRadius * 0.5;
           
           ctx.fillStyle = '#ffffff';
           ctx.beginPath();
-          ctx.arc(segment.x + Math.cos(eyeAngle + Math.PI/4) * 4, segment.y + Math.sin(eyeAngle + Math.PI/4) * 4, 2, 0, Math.PI * 2);
+          ctx.arc(segment.x + Math.cos(eyeAngle + Math.PI/4) * eyeDist, segment.y + Math.sin(eyeAngle + Math.PI/4) * eyeDist, eyeRadius, 0, Math.PI * 2);
           ctx.fill();
           ctx.beginPath();
-          ctx.arc(segment.x + Math.cos(eyeAngle - Math.PI/4) * 4, segment.y + Math.sin(eyeAngle - Math.PI/4) * 4, 2, 0, Math.PI * 2);
+          ctx.arc(segment.x + Math.cos(eyeAngle - Math.PI/4) * eyeDist, segment.y + Math.sin(eyeAngle - Math.PI/4) * eyeDist, eyeRadius, 0, Math.PI * 2);
           ctx.fill();
         }
       });
