@@ -26,6 +26,7 @@ type GameState = {
   speed: number;
   growing: number;
   boosting: boolean;
+  boostShrinkCounter: number;
 };
 
 // Constants
@@ -36,6 +37,7 @@ const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
 const PLAYER_SPEED = 3;
 const BOOST_SPEED = 4.5;
+const BOOST_SHRINK_RATE = 5; // Decrease length every 5 frames while boosting
 
 const SlitherGame = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -54,6 +56,7 @@ const SlitherGame = () => {
     speed: PLAYER_SPEED,
     growing: 0,
     boosting: false,
+    boostShrinkCounter: 0,
   });
   const foodColorsRef = useRef<string[]>([]);
 
@@ -115,6 +118,7 @@ const SlitherGame = () => {
         speed: PLAYER_SPEED,
         growing: 0,
         boosting: false,
+        boostShrinkCounter: 0,
       };
       setSnakeLength(1);
     };
@@ -190,10 +194,15 @@ const SlitherGame = () => {
       // Handle boosting
       if (state.boosting && state.snake.length > 2) {
           state.speed = BOOST_SPEED;
-          state.snake.pop();
-          setSnakeLength(state.snake.length);
+          state.boostShrinkCounter++;
+          if (state.boostShrinkCounter >= BOOST_SHRINK_RATE) {
+              state.snake.pop();
+              setSnakeLength(state.snake.length);
+              state.boostShrinkCounter = 0;
+          }
       } else {
           state.speed = PLAYER_SPEED;
+          state.boostShrinkCounter = 0;
       }
       
       // Update Player
