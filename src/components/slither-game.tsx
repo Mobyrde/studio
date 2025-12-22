@@ -40,7 +40,7 @@ const FOOD_RADIUS = 5;
 const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
 const PLAYER_SPEED = 3.1104;
-const BOOST_SPEED = 8.95104;
+const BOOST_SPEED = 10.741248;
 const BOOST_SHRINK_DISTANCE = 10;
 const STARTING_SNAKE_LENGTH = 10;
 const TURN_SPEED = 0.05;
@@ -221,12 +221,15 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
     }
 
     const gameLoop = () => {
-      if (gameStateRef.current.snake.length === 0) {
-          if(!gameOver) setGameOver(true);
+      const state = gameStateRef.current;
+      if (state.snake.length === 0) {
+          if(!gameOver) {
+            setGameOver(true);
+          }
+          cancelAnimationFrame(animationId);
           return;
       }
 
-      const state = gameStateRef.current;
       const playerRadius = getPlayerRadius(state.snake.length);
 
       // Handle boosting
@@ -234,11 +237,14 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
           state.speed = BOOST_SPEED;
           state.boostDistanceCounter += state.speed;
           if (state.boostDistanceCounter >= BOOST_SHRINK_DISTANCE) {
-              if (state.snake.length > STARTING_SNAKE_LENGTH) {
-                  state.snake.pop();
-                  setSnakeLength(state.snake.length);
+              const shrinkAmount = Math.floor(state.boostDistanceCounter / BOOST_SHRINK_DISTANCE);
+              for (let i = 0; i < shrinkAmount; i++) {
+                  if (state.snake.length > STARTING_SNAKE_LENGTH) {
+                      state.snake.pop();
+                  }
               }
-              state.boostDistanceCounter -= BOOST_SHRINK_DISTANCE;
+              setSnakeLength(state.snake.length);
+              state.boostDistanceCounter %= BOOST_SHRINK_DISTANCE;
           }
       } else {
           state.speed = PLAYER_SPEED;
@@ -264,6 +270,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
 
         if (newHead.x < 0 || newHead.x > WORLD_SIZE || newHead.y < 0 || newHead.y > WORLD_SIZE) {
           state.snake = [];
+          if (!gameOver) setGameOver(true);
           return;
         }
 
@@ -307,12 +314,12 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       state.bots.forEach(bot => {
         if (playerDied) return;
         const botHead = bot.body[0];
-        const botRadius = BOT_SNAKE_RADIUS; 
+        const botRadius = BOT_SNAKE_RADIUS;
 
         // Check if player's head hits a bot's body -> PLAYER DIES
         for (let i = 1; i < bot.body.length; i++) {
-          if (checkCollision(playerHead, bot.body[i], playerRadius + botRadius)) {
-            const originalBot = gameStateRef.current.bots.find(b => b.id === bot.id);
+          if (checkCollision(playerHead, bot.body[i], playerRadius + botRadius / 2)) {
+             const originalBot = gameStateRef.current.bots.find(b => b.id === bot.id);
             if (originalBot) {
               originalBot.balance += balance;
             }
@@ -324,16 +331,19 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
 
         // Check if bot's head hits player's body -> BOT DIES
         for (let i = 1; i < state.snake.length; i++) {
-          if (checkCollision(botHead, state.snake[i], botRadius + playerRadius)) {
+          if (checkCollision(botHead, state.snake[i], botRadius + playerRadius / 2)) {
             if (!killedBots.includes(bot.id)) {
+                setBalance(b => b + bot.balance);
                 state.food.push(...generateFood(Math.floor(bot.body.length / 2), botHead, bot.balance / (bot.body.length / 2) ));
                 killedBots.push(bot.id);
             }
+            return; // Bot is dead, no need to check further for this bot
           }
         }
       });
       
       if(playerDied) {
+          state.food.push(...generateFood(Math.floor(state.snake.length / 2), playerHead, 0 ));
           state.snake = [];
           if(!gameOver) setGameOver(true);
           return;
@@ -342,7 +352,6 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       if (killedBots.length > 0) {
           state.bots = state.bots.filter(b => !killedBots.includes(b.id));
       }
-
 
       // Respawn bots if needed
       if (state.bots.length < BOT_COUNT) {
@@ -508,5 +517,3 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
 };
 
 export default SlitherGame;
-
-    
