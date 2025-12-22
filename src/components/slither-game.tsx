@@ -39,7 +39,7 @@ const FOOD_RADIUS = 5;
 const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
 const PLAYER_SPEED = 2.592;
-const BOOST_SPEED = 6.216;
+const BOOST_SPEED = 7.4592;
 const BOOST_SHRINK_RATE = 5;
 const STARTING_SNAKE_LENGTH = 10;
 const TURN_SPEED = 0.05;
@@ -288,31 +288,28 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       const playerHead = state.snake[0];
 
       state.bots = state.bots.filter(bot => {
-        if (gameOver) return true; // Keep bots if game is already over
+        if (gameOver) return true;
         const botHead = bot.body[0];
 
-        // Check if player's head hits a bot's body
+        // Check if player's head hits a bot's body -> PLAYER DIES
         for (let i = 1; i < bot.body.length; i++) {
           if (checkCollision(playerHead, bot.body[i], playerRadius + BOT_SNAKE_RADIUS)) {
-            // Player kills bot, gets balance
-            state.food.push(...generateFood(Math.floor(bot.body.length / 2), botHead));
-            setBalance(b => b + bot.balance);
-            return false; // Remove bot
-          }
-        }
-
-        // Check if bot's head hits player's body
-        for (let i = 1; i < state.snake.length; i++) {
-          if (checkCollision(botHead, state.snake[i], BOT_SNAKE_RADIUS + playerRadius)) {
-            // Player dies, bot gets balance
-            // Find the bot in the original array to update its balance
             const originalBot = gameStateRef.current.bots.find(b => b === bot);
             if (originalBot) {
-                originalBot.balance += balance;
+              originalBot.balance += balance;
             }
             setBalance(0);
             setGameOver(true);
-            return true; // Keep bot, but game is over
+            return true; 
+          }
+        }
+
+        // Check if bot's head hits player's body -> BOT DIES
+        for (let i = 1; i < state.snake.length; i++) {
+          if (checkCollision(botHead, state.snake[i], BOT_SNAKE_RADIUS + playerRadius)) {
+            state.food.push(...generateFood(Math.floor(bot.body.length / 2), botHead));
+            setBalance(b => b + bot.balance);
+            return false; // Remove bot
           }
         }
         return true; // Keep bot
