@@ -37,13 +37,17 @@ const BOT_SNAKE_RADIUS = 8;
 const FOOD_RADIUS = 5;
 const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
-const PLAYER_SPEED = 1.8;
-const BOOST_SPEED = 3.6;
+const PLAYER_SPEED = 2.16;
+const BOOST_SPEED = 4.32;
 const BOOST_SHRINK_RATE = 5;
 const STARTING_SNAKE_LENGTH = 10;
 const TURN_SPEED = 0.075;
 
-const SlitherGame = () => {
+interface SlitherGameProps {
+  onGameOver: () => void;
+}
+
+const SlitherGame = ({ onGameOver }: SlitherGameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
@@ -64,6 +68,12 @@ const SlitherGame = () => {
     boostShrinkCounter: 0,
   });
   const foodColorsRef = useRef<string[]>([]);
+
+  useEffect(() => {
+    if (gameOver) {
+      onGameOver();
+    }
+  }, [gameOver, onGameOver]);
 
   // Fetch AI-generated food colors on component mount
   useEffect(() => {
@@ -438,23 +448,6 @@ const SlitherGame = () => {
           className="border-4 border-accent rounded-lg shadow-2xl shadow-accent/20"
           aria-label="Neon Slither game board"
         />
-        
-        {gameOver && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/75 backdrop-blur-sm rounded-lg">
-            <div className="text-center">
-              <h2 className="text-5xl font-bold text-white mb-4 font-headline">Game Over!</h2>
-              <p className="text-2xl text-yellow-400 mb-6">Final Score: {score}</p>
-              <Button
-                onClick={restartGame}
-                variant="default"
-                size="lg"
-                className="bg-primary hover:bg-primary/80 text-primary-foreground font-bold transition-transform duration-200 hover:scale-105"
-              >
-                Play Again
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
       
       <div className="mt-4 text-center text-muted-foreground">
@@ -467,5 +460,3 @@ const SlitherGame = () => {
 };
 
 export default SlitherGame;
-
-    
