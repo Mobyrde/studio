@@ -11,6 +11,7 @@ type Position = { x: number; y: number };
 type Snake = Position[];
 type Food = Position & { color: string };
 type Bot = {
+  id: number;
   body: Snake;
   direction: Position;
   speed: number;
@@ -43,6 +44,8 @@ const BOOST_SPEED = 7.4592;
 const BOOST_SHRINK_RATE = 5;
 const STARTING_SNAKE_LENGTH = 10;
 const TURN_SPEED = 0.05;
+
+let botIdCounter = 0;
 
 interface SlitherGameProps {
   onGameOver: () => void;
@@ -118,6 +121,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       const y = Math.random() * WORLD_SIZE;
       const body: Snake = Array.from({ length }, (_, i) => ({ x: x - i * 15, y }));
       return {
+        id: botIdCounter++,
         body,
         direction: { x: Math.random() - 0.5, y: Math.random() - 0.5 },
         speed: 2 + Math.random(),
@@ -128,6 +132,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
     };
 
     const initGame = () => {
+      botIdCounter = 0;
       gameStateRef.current = {
         snake: Array.from({ length: STARTING_SNAKE_LENGTH }, (_, i) => ({ x: WORLD_SIZE / 2 - i * 10, y: WORLD_SIZE / 2 })),
         direction: { x: 1, y: 0 },
@@ -142,12 +147,14 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       };
       setSnakeLength(STARTING_SNAKE_LENGTH);
       setBalance(lobby);
+      setScore(0);
+      setGameOver(false);
     };
 
     initGame();
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (gameOver) return;
+      if (gameStateRef.current.snake.length === 0) return;
       const rect = canvas.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
@@ -213,7 +220,11 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
     }
 
     const gameLoop = () => {
-      if (gameOver) return;
+      if (gameStateRef.current.snake.length === 0) {
+          if(!gameOver) setGameOver(true);
+          return;
+      }
+
       const state = gameStateRef.current;
       const playerRadius = getPlayerRadius(state.snake.length);
 
@@ -251,7 +262,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
         };
 
         if (newHead.x < 0 || newHead.x > WORLD_SIZE || newHead.y < 0 || newHead.y > WORLD_SIZE) {
-          setGameOver(true);
+          state.snake = [];
           return;
         }
 
@@ -286,34 +297,45 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       
       // Collision Checks
       const playerHead = state.snake[0];
+      const killedBots: number[] = [];
 
-      state.bots = state.bots.filter(bot => {
-        if (gameOver) return true;
+      state.bots.forEach(bot => {
+        if (state.snake.length === 0) return;
         const botHead = bot.body[0];
 
         // Check if player's head hits a bot's body -> PLAYER DIES
         for (let i = 1; i < bot.body.length; i++) {
           if (checkCollision(playerHead, bot.body[i], playerRadius + BOT_SNAKE_RADIUS)) {
-            const originalBot = gameStateRef.current.bots.find(b => b === bot);
+            const originalBot = gameStateRef.current.bots.find(b => b.id === bot.id);
             if (originalBot) {
               originalBot.balance += balance;
             }
             setBalance(0);
-            setGameOver(true);
-            return true; 
+            state.snake = [];
+            return; 
           }
         }
 
         // Check if bot's head hits player's body -> BOT DIES
         for (let i = 1; i < state.snake.length; i++) {
           if (checkCollision(botHead, state.snake[i], BOT_SNAKE_RADIUS + playerRadius)) {
-            state.food.push(...generateFood(Math.floor(bot.body.length / 2), botHead));
-            setBalance(b => b + bot.balance);
-            return false; // Remove bot
+            if (!killedBots.includes(bot.id)) {
+                state.food.push(...generateFood(Math.floor(bot.body.length / 2), botHead));
+                setBalance(b => b + bot.balance);
+                killedBots.push(bot.id);
+            }
           }
         }
-        return true; // Keep bot
       });
+      
+      if(state.snake.length === 0) {
+          if(!gameOver) setGameOver(true);
+          return;
+      }
+      
+      if (killedBots.length > 0) {
+          state.bots = state.bots.filter(b => !killedBots.includes(b.id));
+      }
 
 
       // Respawn bots if needed
@@ -426,7 +448,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       canvas.removeEventListener('mouseup', handleMouseUp);
       cancelAnimationFrame(animationId);
     };
-  }, [gameOver, isReady, lobby, balance]);
+  }, [isReady, lobby]);
 
   useEffect(() => {
     if (score > highScore) {
@@ -434,12 +456,6 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
     }
   }, [score, highScore]);
 
-  const restartGame = () => {
-    setGameOver(false);
-    setScore(0);
-    setSnakeLength(STARTING_SNAKE_LENGTH);
-    setBalance(lobby);
-  };
 
   if (!isReady) {
     return (
