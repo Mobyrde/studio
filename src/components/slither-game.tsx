@@ -29,7 +29,7 @@ type GameState = {
   speed: number;
   growing: number;
   boosting: boolean;
-  boostShrinkCounter: number;
+  boostDistanceCounter: number;
 };
 
 // Constants
@@ -39,9 +39,9 @@ const BOT_SNAKE_RADIUS = 8;
 const FOOD_RADIUS = 5;
 const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
-const PLAYER_SPEED = 2.592;
-const BOOST_SPEED = 7.4592;
-const BOOST_SHRINK_RATE = 5;
+const PLAYER_SPEED = 3.1104;
+const BOOST_SPEED = 8.95104;
+const BOOST_SHRINK_DISTANCE = 10;
 const STARTING_SNAKE_LENGTH = 10;
 const TURN_SPEED = 0.05;
 
@@ -71,7 +71,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
     speed: PLAYER_SPEED,
     growing: 0,
     boosting: false,
-    boostShrinkCounter: 0,
+    boostDistanceCounter: 0,
   });
   const foodColorsRef = useRef<string[]>([]);
 
@@ -144,7 +144,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
         speed: PLAYER_SPEED,
         growing: 0,
         boosting: false,
-        boostShrinkCounter: 0,
+        boostDistanceCounter: 0,
       };
       setSnakeLength(STARTING_SNAKE_LENGTH);
       setBalance(lobby);
@@ -232,17 +232,17 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       // Handle boosting
       if (state.boosting && state.snake.length > STARTING_SNAKE_LENGTH) {
           state.speed = BOOST_SPEED;
-          state.boostShrinkCounter++;
-          if (state.boostShrinkCounter >= BOOST_SHRINK_RATE) {
+          state.boostDistanceCounter += state.speed;
+          if (state.boostDistanceCounter >= BOOST_SHRINK_DISTANCE) {
               if (state.snake.length > STARTING_SNAKE_LENGTH) {
                   state.snake.pop();
                   setSnakeLength(state.snake.length);
               }
-              state.boostShrinkCounter = 0;
+              state.boostDistanceCounter -= BOOST_SHRINK_DISTANCE;
           }
       } else {
           state.speed = PLAYER_SPEED;
-          state.boostShrinkCounter = 0;
+          state.boostDistanceCounter = 0;
       }
       
       // Update Player
@@ -302,36 +302,39 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       // Collision Checks
       const playerHead = state.snake[0];
       const killedBots: number[] = [];
+      let playerDied = false;
 
       state.bots.forEach(bot => {
-        if (state.snake.length === 0) return;
+        if (playerDied) return;
         const botHead = bot.body[0];
+        const botRadius = BOT_SNAKE_RADIUS; 
 
         // Check if player's head hits a bot's body -> PLAYER DIES
         for (let i = 1; i < bot.body.length; i++) {
-          if (checkCollision(playerHead, bot.body[i], playerRadius + BOT_SNAKE_RADIUS)) {
+          if (checkCollision(playerHead, bot.body[i], playerRadius + botRadius)) {
             const originalBot = gameStateRef.current.bots.find(b => b.id === bot.id);
             if (originalBot) {
               originalBot.balance += balance;
             }
             setBalance(0);
-            state.snake = [];
-            return; 
+            playerDied = true;
+            return;
           }
         }
 
         // Check if bot's head hits player's body -> BOT DIES
         for (let i = 1; i < state.snake.length; i++) {
-          if (checkCollision(botHead, state.snake[i], BOT_SNAKE_RADIUS + playerRadius)) {
+          if (checkCollision(botHead, state.snake[i], botRadius + playerRadius)) {
             if (!killedBots.includes(bot.id)) {
-                state.food.push(...generateFood(Math.floor(bot.body.length / 2), botHead, 1));
+                state.food.push(...generateFood(Math.floor(bot.body.length / 2), botHead, bot.balance / (bot.body.length / 2) ));
                 killedBots.push(bot.id);
             }
           }
         }
       });
       
-      if(state.snake.length === 0) {
+      if(playerDied) {
+          state.snake = [];
           if(!gameOver) setGameOver(true);
           return;
       }
@@ -380,7 +383,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
           ctx.shadowColor = 'gold';
           ctx.shadowBlur = 15;
         }
-        ctx.beginPath(); ctx.arc(f.x, f.y, FOOD_RADIUS + f.value * 2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(f.x, f.y, FOOD_RADIUS + f.value * 0.2, 0, Math.PI * 2); ctx.fill();
         ctx.shadowBlur = 0;
       });
 
@@ -505,3 +508,5 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
 };
 
 export default SlitherGame;
+
+    
