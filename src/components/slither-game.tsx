@@ -36,8 +36,8 @@ const BOT_SNAKE_RADIUS = 8;
 const FOOD_RADIUS = 5;
 const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
-const PLAYER_SPEED = 3;
-const BOOST_SPEED = 4.5;
+const PLAYER_SPEED = 2;
+const BOOST_SPEED = 3;
 const BOOST_SHRINK_RATE = 5; // Decrease length every 5 frames while boosting
 
 const SlitherGame = () => {
