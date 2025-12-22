@@ -39,7 +39,7 @@ const FOOD_COUNT = 200;
 const PLAYER_SPEED = 1.5;
 const BOOST_SPEED = 2.5;
 const BOOST_SHRINK_RATE = 5; // Decrease length every 5 frames while boosting
-const STARTING_SNAKE_LENGTH = 7;
+const STARTING_SNAKE_LENGTH = 10;
 
 const SlitherGame = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -199,7 +199,7 @@ const SlitherGame = () => {
       const playerRadius = getPlayerRadius(state.snake.length);
 
       // Handle boosting
-      if (state.boosting && state.snake.length > 2) {
+      if (state.boosting && state.snake.length > STARTING_SNAKE_LENGTH) {
           state.speed = BOOST_SPEED;
           state.boostShrinkCounter++;
           if (state.boostShrinkCounter >= BOOST_SHRINK_RATE) {
