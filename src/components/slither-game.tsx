@@ -85,12 +85,12 @@ const SlitherGame = () => {
     const ctx = canvas.getContext('2d')!;
     let animationId: number;
 
-    const generateFood = (count: number): Food[] => {
+    const generateFood = (count: number, position?: Position): Food[] => {
       const colors = foodColorsRef.current;
       if (colors.length === 0) return [];
       return Array.from({ length: count }, () => ({
-        x: Math.random() * WORLD_SIZE,
-        y: Math.random() * WORLD_SIZE,
+        x: position ? position.x + (Math.random() - 0.5) * 50 : Math.random() * WORLD_SIZE,
+        y: position ? position.y + (Math.random() - 0.5) * 50 : Math.random() * WORLD_SIZE,
         color: colors[Math.floor(Math.random() * colors.length)],
       }));
     };
@@ -252,6 +252,36 @@ const SlitherGame = () => {
 
       // Update Bots
       state.bots.forEach(updateBot);
+      
+      // Collision Checks
+      const playerHead = state.snake[0];
+
+      state.bots = state.bots.filter(bot => {
+        // Check if bot hits player
+        const botHead = bot.body[0];
+        for (let i = 1; i < state.snake.length; i++) {
+            if (checkCollision(botHead, state.snake[i], BOT_SNAKE_RADIUS + playerRadius)) {
+                // Bot dies, turns into food
+                state.food.push(...generateFood(Math.floor(bot.body.length / 2), botHead));
+                return false; // Remove bot
+            }
+        }
+
+        // Check if player hits bot
+        for (let i = 0; i < bot.body.length; i++) {
+            if (checkCollision(playerHead, bot.body[i], playerRadius + BOT_SNAKE_RADIUS)) {
+                setGameOver(true);
+                return true; // Keep bot, but game is over
+            }
+        }
+        return true; // Keep bot
+      });
+
+      // Respawn bots if needed
+      if (state.bots.length < BOT_COUNT) {
+          state.bots.push(...Array(BOT_COUNT - state.bots.length).fill(null).map(generateBot));
+      }
+
 
       // --- Drawing ---
       ctx.fillStyle = '#1A1A2E';
