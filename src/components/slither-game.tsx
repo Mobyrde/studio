@@ -290,8 +290,9 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
         const botHead = bot.body[0];
         for (let i = 1; i < state.snake.length; i++) {
             if (checkCollision(botHead, state.snake[i], BOT_SNAKE_RADIUS + playerRadius)) {
-                // Bot dies, turns into food
+                // Bot dies, turns into food, transfers balance
                 state.food.push(...generateFood(Math.floor(bot.body.length / 2), botHead));
+                setBalance(b => b + bot.balance);
                 return false; // Remove bot
             }
         }
@@ -299,6 +300,9 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
         // Check if player hits bot
         for (let i = 0; i < bot.body.length; i++) {
             if (checkCollision(playerHead, bot.body[i], playerRadius + BOT_SNAKE_RADIUS)) {
+                // Player dies, bot gets balance
+                bot.balance += balance;
+                setBalance(0);
                 setGameOver(true);
                 return true; // Keep bot, but game is over
             }
@@ -411,7 +415,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       canvas.removeEventListener('mouseup', handleMouseUp);
       cancelAnimationFrame(animationId);
     };
-  }, [gameOver, isReady, lobby]);
+  }, [gameOver, isReady, lobby, balance]);
 
   useEffect(() => {
     if (score > highScore) {
