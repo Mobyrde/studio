@@ -9,7 +9,7 @@ import { Skeleton } from './ui/skeleton';
 // Types
 type Position = { x: number; y: number };
 type Snake = Position[];
-type Food = Position & { color: string };
+type Food = Position & { color: string; value: number };
 type Bot = {
   id: number;
   body: Snake;
@@ -105,13 +105,14 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
     const ctx = canvas.getContext('2d')!;
     let animationId: number;
 
-    const generateFood = (count: number, position?: Position): Food[] => {
+    const generateFood = (count: number, position?: Position, value = 0): Food[] => {
       const colors = foodColorsRef.current;
       if (colors.length === 0) return [];
       return Array.from({ length: count }, () => ({
         x: position ? position.x + (Math.random() - 0.5) * 50 : Math.random() * WORLD_SIZE,
         y: position ? position.y + (Math.random() - 0.5) * 50 : Math.random() * WORLD_SIZE,
-        color: colors[Math.floor(Math.random() * colors.length)],
+        color: value > 0 ? 'gold' : colors[Math.floor(Math.random() * colors.length)],
+        value: value,
       }));
     };
 
@@ -137,7 +138,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
         snake: Array.from({ length: STARTING_SNAKE_LENGTH }, (_, i) => ({ x: WORLD_SIZE / 2 - i * 10, y: WORLD_SIZE / 2 })),
         direction: { x: 1, y: 0 },
         targetDirection: { x: 1, y: 0 },
-        food: generateFood(FOOD_COUNT),
+        food: generateFood(FOOD_COUNT, undefined, 0),
         bots: Array(BOT_COUNT).fill(null).map(generateBot),
         camera: { x: (WORLD_SIZE / 2) - canvas.width / 2, y: (WORLD_SIZE / 2) - canvas.height / 2 },
         speed: PLAYER_SPEED,
@@ -272,6 +273,9 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
           if (checkCollision(newHead, f, playerRadius + FOOD_RADIUS)) {
             state.growing += 1;
             setScore(s => s + 1);
+            if (f.value > 0) {
+              setBalance(b => b + f.value);
+            }
             return false;
           }
           return true;
@@ -320,8 +324,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
         for (let i = 1; i < state.snake.length; i++) {
           if (checkCollision(botHead, state.snake[i], BOT_SNAKE_RADIUS + playerRadius)) {
             if (!killedBots.includes(bot.id)) {
-                state.food.push(...generateFood(Math.floor(bot.body.length / 2), botHead));
-                setBalance(b => b + bot.balance);
+                state.food.push(...generateFood(Math.floor(bot.body.length / 2), botHead, 1));
                 killedBots.push(bot.id);
             }
           }
@@ -373,7 +376,12 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       // Draw Food
       state.food.forEach(f => {
         ctx.fillStyle = f.color;
-        ctx.beginPath(); ctx.arc(f.x, f.y, FOOD_RADIUS, 0, Math.PI * 2); ctx.fill();
+        if (f.value > 0) {
+          ctx.shadowColor = 'gold';
+          ctx.shadowBlur = 15;
+        }
+        ctx.beginPath(); ctx.arc(f.x, f.y, FOOD_RADIUS + f.value * 2, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
       });
 
       // Draw Bots
@@ -497,5 +505,3 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
 };
 
 export default SlitherGame;
-
-    
