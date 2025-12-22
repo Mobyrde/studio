@@ -36,8 +36,8 @@ const BOT_SNAKE_RADIUS = 8;
 const FOOD_RADIUS = 5;
 const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
-const PLAYER_SPEED = 2;
-const BOOST_SPEED = 3;
+const PLAYER_SPEED = 1.5;
+const BOOST_SPEED = 2.5;
 const BOOST_SHRINK_RATE = 5; // Decrease length every 5 frames while boosting
 
 const SlitherGame = () => {
@@ -299,7 +299,7 @@ const SlitherGame = () => {
       // Draw Player
       const pulse = Math.abs(Math.sin(Date.now() / 300));
       state.snake.forEach((segment, i) => {
-        const segmentRadius = playerRadius * (1 - (i / (state.snake.length * 2)));
+        const segmentRadius = playerRadius;
         const gradient = ctx.createRadialGradient(segment.x, segment.y, 0, segment.x, segment.y, segmentRadius);
         gradient.addColorStop(0, 'hsl(267, 100%, 70%)');
         gradient.addColorStop(1, 'hsl(267, 100%, 50%)');
