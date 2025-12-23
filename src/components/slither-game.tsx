@@ -40,7 +40,7 @@ const FOOD_RADIUS = 5;
 const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
 const PLAYER_SPEED = 3.1104;
-const BOOST_SPEED = 1.6111872;
+const BOOST_SPEED = 6.2208; // Increased from 1.6111872
 const BOOST_SHRINK_DISTANCE = 50;
 const STARTING_SNAKE_LENGTH = 10;
 const TURN_SPEED = 0.05;
@@ -252,56 +252,66 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       }
       
       // Update Player
-      if (state.direction.x !== 0 || state.direction.y !== 0) {
-        // Smoothly update direction
-        state.direction.x += (state.targetDirection.x - state.direction.x) * TURN_SPEED;
-        state.direction.y += (state.targetDirection.y - state.direction.y) * TURN_SPEED;
-        const dirLength = Math.sqrt(state.direction.x**2 + state.direction.y**2);
-        if (dirLength > 0) {
-            state.direction.x /= dirLength;
-            state.direction.y /= dirLength;
-        }
-
-        const head = state.snake[0];
-        const newHead = {
-          x: head.x + state.direction.x * state.speed,
-          y: head.y + state.direction.y * state.speed,
-        };
-
-        if (newHead.x < 0 || newHead.x > WORLD_SIZE || newHead.y < 0 || newHead.y > WORLD_SIZE) {
-          state.snake = [];
-          if (!gameOver) setGameOver(true);
-          return;
-        }
-
-        state.snake.unshift(newHead);
-
-        state.food = state.food.filter(f => {
-          if (checkCollision(newHead, f, playerRadius + FOOD_RADIUS)) {
-            state.growing += 1;
-            setScore(s => s + 1);
-            if (f.value > 0) {
-              setBalance(b => b + f.value);
-            }
-            return false;
-          }
-          return true;
-        });
-
-        if (state.food.length < FOOD_COUNT) {
-          state.food.push(...generateFood(FOOD_COUNT - state.food.length));
-        }
-
-        if (state.growing > 0) {
-          state.growing--;
-        } else {
-          state.snake.pop();
-        }
-        setSnakeLength(state.snake.length);
-
-        state.camera.x = newHead.x - canvas.width / 2;
-        state.camera.y = newHead.y - canvas.height / 2;
+      // Smoothly update direction
+      state.direction.x += (state.targetDirection.x - state.direction.x) * TURN_SPEED;
+      state.direction.y += (state.targetDirection.y - state.direction.y) * TURN_SPEED;
+      const dirLength = Math.sqrt(state.direction.x**2 + state.direction.y**2);
+      if (dirLength > 0) {
+          state.direction.x /= dirLength;
+          state.direction.y /= dirLength;
       }
+
+      const head = state.snake[0];
+      const newHead = {
+        x: head.x + state.direction.x * state.speed,
+        y: head.y + state.direction.y * state.speed,
+      };
+
+      if (newHead.x < 0 || newHead.x > WORLD_SIZE || newHead.y < 0 || newHead.y > WORLD_SIZE) {
+        state.snake = [];
+        if (!gameOver) setGameOver(true);
+        return;
+      }
+
+      state.snake.unshift(newHead);
+
+      state.food = state.food.filter(f => {
+        if (checkCollision(newHead, f, playerRadius + FOOD_RADIUS)) {
+          state.growing += 1;
+          setScore(s => s + 1);
+          if (f.value > 0) {
+            setBalance(b => b + f.value);
+          }
+          return false;
+        }
+        return true;
+      });
+
+      if (state.food.length < FOOD_COUNT) {
+        state.food.push(...generateFood(FOOD_COUNT - state.food.length));
+      }
+
+      if (state.growing > 0) {
+        state.growing--;
+      } else if (state.snake.length > STARTING_SNAKE_LENGTH && state.boosting) {
+        // This is the main fix. We only shrink if not growing AND boosting.
+        // The check to pop is now correct.
+        state.snake.pop();
+      } else if (!state.boosting) {
+          // If not growing and not boosting, we should still pop to maintain length
+          state.snake.pop();
+      }
+       
+      if (state.growing > 0) {
+        state.growing--;
+      } else {
+        state.snake.pop();
+      }
+      setSnakeLength(state.snake.length);
+
+      state.camera.x = newHead.x - canvas.width / 2;
+      state.camera.y = newHead.y - canvas.height / 2;
+      
 
       // Update Bots
       state.bots.forEach(updateBot);
@@ -512,5 +522,3 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
 };
 
 export default SlitherGame;
-
-    
