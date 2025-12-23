@@ -59,7 +59,7 @@ const DamnBruhPage = () => {
             {
               from: walletAddress,
               // 'to' would be your smart contract address
-              to: '0x0000000000000000000000000000000000000000', 
+              to: '0xDf302199E80B8ccF998Cfb746c46ce94B70F3e23', 
               value: `0x${amountInWei}`,
               // 'data' would be the encoded function call to your smart contract
             },
