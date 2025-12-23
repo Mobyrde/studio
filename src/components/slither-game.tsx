@@ -12,6 +12,7 @@ type Snake = Position[];
 type Food = Position & { color: string; value: number };
 type Bot = {
   id: number;
+  name: string;
   body: Snake;
   direction: Position;
   speed: number;
@@ -39,8 +40,8 @@ const BOT_SNAKE_RADIUS = 8;
 const FOOD_RADIUS = 5;
 const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
-const PLAYER_SPEED = 2.5;
-const BOOST_SPEED = 5;
+const PLAYER_SPEED = 3.5;
+const BOOST_SPEED = 7;
 const BOOST_SHRINK_DISTANCE = 50; 
 const STARTING_SNAKE_LENGTH = 10;
 const TURN_SPEED = 0.05;
@@ -50,9 +51,10 @@ let botIdCounter = 0;
 interface SlitherGameProps {
   onGameOver: () => void;
   lobby: number;
+  playerName: string;
 }
 
-const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
+const SlitherGame = ({ onGameOver, lobby, playerName }: SlitherGameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameOverState, setGameOverState] = useState(false);
   const [score, setScore] = useState(0);
@@ -102,6 +104,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
     if (!isReady) return;
 
     const canvas = canvasRef.current!;
+    if (!canvas) return;
     const ctx = canvas.getContext('2d')!;
     let animationId: number;
 
@@ -123,6 +126,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       const body: Snake = Array.from({ length }, (_, i) => ({ x: x - i * 15, y }));
       return {
         id: botIdCounter++,
+        name: `Bot ${botIdCounter}`,
         body,
         direction: { x: Math.random() - 0.5, y: Math.random() - 0.5 },
         speed: 2 + Math.random(),
@@ -150,6 +154,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       setBalance(lobby);
       setScore(0);
       setGameOverState(false);
+      gameLoop();
     };
 
     initGame();
@@ -220,7 +225,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
         return BASE_SNAKE_RADIUS + Math.log10(length) * 2;
     }
 
-    const gameLoop = () => {
+    function gameLoop() {
       if (!canvasRef.current) return;
       const state = gameStateRef.current;
       if (state.snake.length === 0) {
@@ -243,8 +248,9 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
               const shrinkAmount = Math.floor(state.boostDistanceCounter / BOOST_SHRINK_DISTANCE);
               for (let i = 0; i < shrinkAmount; i++) {
                   if (state.snake.length > STARTING_SNAKE_LENGTH) {
-                      // No growth, so just pop.
-                      if (state.growing === 0) {
+                      if (state.growing > 0) {
+                          state.growing--;
+                      } else {
                           state.snake.pop();
                       }
                   }
@@ -281,9 +287,11 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
 
       state.snake.unshift(newHead);
 
+      let ateFood = false;
       state.food = state.food.filter(f => {
         if (checkCollision(newHead, f, playerRadius + FOOD_RADIUS)) {
           state.growing += 1;
+          ateFood = true;
           setScore(s => s + 1);
           if (f.value > 0) {
             setBalance(b => b + f.value);
@@ -298,10 +306,13 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       }
 
       if (state.growing > 0) {
-        state.growing--;
-      } else {
-        // If not growing, the snake's tail is removed, keeping its length constant.
-        // This must happen every frame unless the snake is eating.
+        if (ateFood) {
+          // Snake only grows when it eats
+          state.growing--;
+        } else if (!isBoosting) {
+           state.snake.pop();
+        }
+      } else if (!isBoosting) {
         state.snake.pop();
       }
       setSnakeLength(state.snake.length);
@@ -398,10 +409,18 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
         ctx.shadowBlur = 0;
       });
 
+      const drawName = (name: string, position: Position, color: string) => {
+        ctx.fillStyle = color;
+        ctx.font = '14px "Space Grotesk", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(name, position.x, position.y - 20);
+      }
+
       // Draw Bots
       ctx.globalAlpha = 1;
       state.bots.forEach(bot => {
         const segmentRadius = BOT_SNAKE_RADIUS;
+        drawName(bot.name, bot.body[0], bot.color);
         bot.body.forEach((segment, i) => {
           ctx.fillStyle = bot.color;
           const gradient = ctx.createRadialGradient(segment.x, segment.y, 0, segment.x, segment.y, segmentRadius);
@@ -416,6 +435,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
 
       // Draw Player
       const pulse = Math.abs(Math.sin(Date.now() / 300));
+      drawName(playerName || 'Player', state.snake[0], 'hsl(267, 100%, 70%)');
       state.snake.forEach((segment, i) => {
         const segmentRadius = getPlayerRadius(state.snake.length);
         const gradient = ctx.createRadialGradient(segment.x, segment.y, 0, segment.x, segment.y, segmentRadius);
@@ -462,15 +482,13 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       animationId = requestAnimationFrame(gameLoop);
     };
 
-    gameLoop();
-
     return () => {
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mousedown', handleMouseDown);
       canvas.removeEventListener('mouseup', handleMouseUp);
       cancelAnimationFrame(animationId);
     };
-  }, [isReady, lobby]);
+  }, [isReady, lobby, playerName]);
 
   useEffect(() => {
     if (score > highScore) {

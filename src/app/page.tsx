@@ -4,12 +4,14 @@
 import React, { useState } from 'react';
 import SlitherGame from '@/components/slither-game';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 const DamnBruhPage = () => {
   const [lobby, setLobby] = useState<number | null>(1);
   const [gameStarted, setGameStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
+  const [playerName, setPlayerName] = useState('');
 
   const handleLobbySelect = (amount: number) => {
     setLobby(amount);
@@ -31,12 +33,13 @@ const DamnBruhPage = () => {
     setGameOver(false);
     setGameStarted(false); 
     setLobby(1);
+    setPlayerName('');
   };
 
   if (gameStarted) {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
-        <SlitherGame onGameOver={handleGameOver} lobby={lobby!} />
+        <SlitherGame onGameOver={handleGameOver} lobby={lobby!} playerName={playerName} />
       </main>
     );
   }
@@ -74,6 +77,13 @@ const DamnBruhPage = () => {
         <div className="mt-12 flex flex-col items-center gap-6">
             {!gameOver && (
                 <>
+                    <Input
+                        type="text"
+                        placeholder="Enter your name"
+                        value={playerName}
+                        onChange={(e) => setPlayerName(e.target.value)}
+                        className="w-80 bg-transparent text-center text-xl font-bold text-white border-2 border-muted-foreground focus:border-primary focus:ring-primary focus:shadow-[0_0_20px] focus:shadow-primary transition-all duration-300"
+                    />
                     <div className="flex justify-center gap-4">
                         {[1, 5, 20].map((amount) => (
                         <Button
