@@ -59,21 +59,22 @@ const DamnBruhPage = () => {
   };
 
   const handleConnectWallet = async () => {
-    if (window.ethereum) {
+    if (window.tronWeb) {
       try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const address = accounts[0];
+        const res = await window.tronWeb.request({ method: 'tron_requestAccounts' });
+        if (res.code !== 200) {
+            throw new Error(res.message || 'Failed to connect to TronLink.');
+        }
+
+        const address = window.tronWeb.defaultAddress.base58;
         setWalletAddress(address);
 
-        const balanceWei = await window.ethereum.request({
-          method: 'eth_getBalance',
-          params: [address, 'latest'],
-        });
+        const balanceSun = await window.tronWeb.trx.getBalance(address);
         
-        // The balance is returned in Wei, which is 10^18 of an ETH.
-        // We convert it to ETH for display.
-        const balanceEth = parseFloat(balanceWei) / 1e18;
-        setWalletBalance(balanceEth.toFixed(4));
+        // The balance is returned in SUN, which is 10^6 of a TRX.
+        // We convert it to TRX for display.
+        const balanceTrx = balanceSun / 1_000_000;
+        setWalletBalance(balanceTrx.toFixed(2));
 
         toast({
           title: "Wallet Connected",
@@ -90,8 +91,8 @@ const DamnBruhPage = () => {
     } else {
       toast({
         variant: "destructive",
-        title: "No Wallet Detected",
-        description: "Please install a wallet like MetaMask or Trust Wallet.",
+        title: "No TRON Wallet Detected",
+        description: "Please install a TRON wallet like TronLink.",
       });
     }
   };
@@ -162,7 +163,7 @@ const DamnBruhPage = () => {
                         ))}
                     </div>
                      {walletAddress && walletBalance && (
-                        <div className="text-accent text-lg">Balance: {walletBalance} ETH</div>
+                        <div className="text-accent text-lg">Balance: {walletBalance} TRX</div>
                     )}
                     <div className="flex items-center gap-4">
                         <Button
