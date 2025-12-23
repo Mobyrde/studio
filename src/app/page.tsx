@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 type Server = {
     name: string;
@@ -18,6 +19,8 @@ const SERVERS: Server[] = [
     { name: 'Server 2', amount: 5 },
     { name: 'Server 3', amount: 20 },
 ]
+
+const GAME_WALLET_ADDRESS = '0xDf302199E80B8ccF998Cfb746c46ce94B70F3e23';
 
 declare global {
   interface Window {
@@ -58,8 +61,7 @@ const DamnBruhPage = () => {
           params: [
             {
               from: walletAddress,
-              // 'to' would be your smart contract address
-              to: '0xDf302199E80B8ccF998Cfb746c46ce94B70F3e23', 
+              to: GAME_WALLET_ADDRESS, 
               value: `0x${amountInWei}`,
               // 'data' would be the encoded function call to your smart contract
             },
@@ -247,12 +249,34 @@ const DamnBruhPage = () => {
                         ))}
                     </div>
                      {walletAddress && walletBalance && (
-                        <div className="text-accent text-lg">Balance: {walletBalance} MATIC</div>
+                        <Card className="bg-card/50 border-muted-foreground/50 text-left w-96">
+                            <CardHeader>
+                                <CardTitle className="text-lg">Your Wallet</CardTitle>
+                                <CardDescription className="text-xs truncate">{walletAddress}</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-3xl font-bold text-accent">{walletBalance} <span className='text-lg'>MATIC</span></div>
+                                <div className="flex gap-2 mt-4">
+                                     <Button disabled className="w-full bg-transparent border border-accent text-accent hover:bg-accent/10">Add Funds</Button>
+                                     <Button disabled className="w-full bg-transparent border border-muted-foreground text-muted-foreground">Cash Out</Button>
+                                </div>
+                            </CardContent>
+                        </Card>
                     )}
+                    <Card className="bg-card/50 border-muted-foreground/50 text-left w-96">
+                        <CardHeader>
+                            <CardTitle className="text-lg">Game Treasury</CardTitle>
+                            <CardDescription className="text-xs truncate">{GAME_WALLET_ADDRESS}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-3xl font-bold text-primary">0.00 <span className='text-lg'>MATIC</span></div>
+                             <p className="text-xs text-muted-foreground mt-2">This is the treasury wallet. Funds are pooled here for gameplay.</p>
+                        </CardContent>
+                    </Card>
                     <div className="flex items-center gap-4">
                         <Button
                             onClick={handleJoinGame}
-                            disabled={!selectedServer || !walletAddress || isProcessingTx}
+                            disabled={!selectedServer || !walletAddress || isProcessingTx || !playerName}
                             className="bg-primary text-primary-foreground text-2xl font-bold py-4 px-12 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:scale-100 shadow-[0_0_30px] shadow-primary/70"
                         >
                             {isProcessingTx ? 'Processing...' : 'Join Game'}
@@ -283,3 +307,5 @@ const DamnBruhPage = () => {
 };
 
 export default DamnBruhPage;
+
+    
