@@ -1,8 +1,8 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
 import { generateFoodColorPalette } from '@/ai/flows/generate-food-color-palette';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from './ui/skeleton';
 
@@ -39,9 +39,9 @@ const BOT_SNAKE_RADIUS = 8;
 const FOOD_RADIUS = 5;
 const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
-const PLAYER_SPEED = 3.1104;
-const BOOST_SPEED = 6.2208;
-const BOOST_SHRINK_DISTANCE = 50;
+const PLAYER_SPEED = 2.5;
+const BOOST_SPEED = 5;
+const BOOST_SHRINK_DISTANCE = 50; 
 const STARTING_SNAKE_LENGTH = 10;
 const TURN_SPEED = 0.05;
 
@@ -54,7 +54,7 @@ interface SlitherGameProps {
 
 const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [gameOver, setGameOver] = useState(false);
+  const [gameOverState, setGameOverState] = useState(false);
   const [score, setScore] = useState(0);
   const [balance, setBalance] = useState(lobby);
   const [snakeLength, setSnakeLength] = useState(STARTING_SNAKE_LENGTH);
@@ -76,10 +76,10 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
   const foodColorsRef = useRef<string[]>([]);
 
   useEffect(() => {
-    if (gameOver) {
+    if (gameOverState) {
       onGameOver();
     }
-  }, [gameOver, onGameOver]);
+  }, [gameOverState, onGameOver]);
 
   // Fetch AI-generated food colors on component mount
   useEffect(() => {
@@ -149,7 +149,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       setSnakeLength(STARTING_SNAKE_LENGTH);
       setBalance(lobby);
       setScore(0);
-      setGameOver(false);
+      setGameOverState(false);
     };
 
     initGame();
@@ -221,10 +221,11 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
     }
 
     const gameLoop = () => {
+      if (!canvasRef.current) return;
       const state = gameStateRef.current;
       if (state.snake.length === 0) {
-          if(!gameOver) {
-            setGameOver(true);
+          if(!gameOverState) {
+            setGameOverState(true);
           }
           cancelAnimationFrame(animationId);
           return;
@@ -232,15 +233,20 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
 
       const playerRadius = getPlayerRadius(state.snake.length);
       
-      // Handle boosting
-      if (state.boosting && state.snake.length > STARTING_SNAKE_LENGTH) {
+      let isBoosting = state.boosting && state.snake.length > STARTING_SNAKE_LENGTH;
+
+      if (isBoosting) {
           state.speed = BOOST_SPEED;
           state.boostDistanceCounter += state.speed;
+      
           if (state.boostDistanceCounter >= BOOST_SHRINK_DISTANCE) {
               const shrinkAmount = Math.floor(state.boostDistanceCounter / BOOST_SHRINK_DISTANCE);
               for (let i = 0; i < shrinkAmount; i++) {
                   if (state.snake.length > STARTING_SNAKE_LENGTH) {
-                      state.snake.pop();
+                      // No growth, so just pop.
+                      if (state.growing === 0) {
+                          state.snake.pop();
+                      }
                   }
               }
               setSnakeLength(state.snake.length);
@@ -269,7 +275,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
 
       if (newHead.x < 0 || newHead.x > WORLD_SIZE || newHead.y < 0 || newHead.y > WORLD_SIZE) {
         state.snake = [];
-        if (!gameOver) setGameOver(true);
+        if (!gameOverState) setGameOverState(true);
         return;
       }
 
@@ -294,6 +300,8 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       if (state.growing > 0) {
         state.growing--;
       } else {
+        // If not growing, the snake's tail is removed, keeping its length constant.
+        // This must happen every frame unless the snake is eating.
         state.snake.pop();
       }
       setSnakeLength(state.snake.length);
@@ -339,7 +347,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
           state.food.push(...generateFood(Math.floor(state.snake.length / 2), playerHead, 0 ));
           setBalance(0);
           state.snake = [];
-          if(!gameOver) setGameOver(true);
+          if(!gameOverState) setGameOverState(true);
           return;
       }
       
