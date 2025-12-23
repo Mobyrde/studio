@@ -40,8 +40,8 @@ const FOOD_RADIUS = 5;
 const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
 const PLAYER_SPEED = 3.1104;
-const BOOST_SPEED = 6.4447488;
-const BOOST_SHRINK_DISTANCE = 50; // Increased from 25
+const BOOST_SPEED = 3.2223744;
+const BOOST_SHRINK_DISTANCE = 50;
 const STARTING_SNAKE_LENGTH = 10;
 const TURN_SPEED = 0.05;
 
@@ -231,9 +231,11 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       }
 
       const playerRadius = getPlayerRadius(state.snake.length);
+      let isBoosting = false;
 
       // Handle boosting
       if (state.boosting && state.snake.length > STARTING_SNAKE_LENGTH) {
+          isBoosting = true;
           state.speed = BOOST_SPEED;
           state.boostDistanceCounter += state.speed;
           if (state.boostDistanceCounter >= BOOST_SHRINK_DISTANCE) {
@@ -294,7 +296,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
 
         if (state.growing > 0) {
           state.growing--;
-        } else {
+        } else if (!isBoosting) {
           state.snake.pop();
         }
         setSnakeLength(state.snake.length);
