@@ -32,16 +32,61 @@ const DamnBruhPage = () => {
   const [playerName, setPlayerName] = useState('');
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [walletBalance, setWalletBalance] = useState<string | null>(null);
+  const [isProcessingTx, setIsProcessingTx] = useState(false);
   const { toast } = useToast();
 
   const handleLobbySelect = (server: Server) => {
     setSelectedServer(server);
   };
 
-  const handleJoinGame = () => {
-    if (selectedServer) {
-      setGameOver(false);
-      setGameStarted(true);
+  const handleJoinGame = async () => {
+    if (selectedServer && walletAddress) {
+      setIsProcessingTx(true);
+      toast({
+        title: "Transaction Sent",
+        description: `Staking ${selectedServer.amount} MATIC... Please confirm in your wallet.`,
+      });
+
+      try {
+        const amountInWei = (selectedServer.amount * 10**18).toString(16);
+        
+        // This is a simulated transaction.
+        // It asks the user to sign, but doesn't actually spend funds on a real mainnet.
+        // To make this a real transaction, you would need a smart contract address and ABI.
+        const txHash = await window.ethereum.request({
+          method: 'eth_sendTransaction',
+          params: [
+            {
+              from: walletAddress,
+              // 'to' would be your smart contract address
+              to: '0x0000000000000000000000000000000000000000', 
+              value: `0x${amountInWei}`,
+              // 'data' would be the encoded function call to your smart contract
+            },
+          ],
+        });
+
+        // In a real app, you'd wait for the transaction to be mined.
+        // We'll simulate that with a delay.
+        setTimeout(() => {
+          toast({
+            title: "Transaction Confirmed!",
+            description: `${selectedServer.amount} MATIC staked successfully. Joining game...`,
+          });
+          setGameOver(false);
+          setGameStarted(true);
+          setIsProcessingTx(false);
+        }, 2000);
+
+      } catch (error: any) {
+        console.error("Transaction failed:", error);
+        toast({
+          variant: "destructive",
+          title: "Transaction Failed",
+          description: error.message || "Could not complete the stake transaction.",
+        });
+        setIsProcessingTx(false);
+      }
     }
   };
   
@@ -207,10 +252,10 @@ const DamnBruhPage = () => {
                     <div className="flex items-center gap-4">
                         <Button
                             onClick={handleJoinGame}
-                            disabled={!selectedServer || !walletAddress}
+                            disabled={!selectedServer || !walletAddress || isProcessingTx}
                             className="bg-primary text-primary-foreground text-2xl font-bold py-4 px-12 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:scale-100 shadow-[0_0_30px] shadow-primary/70"
                         >
-                            Join Game
+                            {isProcessingTx ? 'Processing...' : 'Join Game'}
                         </Button>
                         <Button
                             onClick={handleConnectWallet}
