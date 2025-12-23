@@ -41,7 +41,7 @@ const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
 const PLAYER_SPEED = 3.1104;
 const BOOST_SPEED = 12.8894976;
-const BOOST_SHRINK_DISTANCE = 25; // Increased from 10
+const BOOST_SHRINK_DISTANCE = 50; // Increased from 25
 const STARTING_SNAKE_LENGTH = 10;
 const TURN_SPEED = 0.05;
 
