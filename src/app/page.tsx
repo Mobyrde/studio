@@ -25,6 +25,7 @@ const DamnBruhPage = () => {
   const [gameOver, setGameOver] = useState(false);
   const [playerName, setPlayerName] = useState('');
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [walletBalance, setWalletBalance] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleLobbySelect = (server: Server) => {
@@ -56,6 +57,12 @@ const DamnBruhPage = () => {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         const address = accounts[0];
         setWalletAddress(address);
+
+        const balanceHex = await window.ethereum.request({ method: 'eth_getBalance', params: [address, 'latest'] });
+        const balanceInWei = BigInt(balanceHex);
+        const balanceInEth = Number(balanceInWei) / 1e18;
+        setWalletBalance(balanceInEth.toFixed(4));
+
         toast({
           title: "Wallet Connected",
           description: `Connected with address: ${address.substring(0, 6)}...${address.substring(address.length - 4)}`,
@@ -142,6 +149,9 @@ const DamnBruhPage = () => {
                         </Button>
                         ))}
                     </div>
+                     {walletAddress && walletBalance && (
+                        <div className="text-accent text-lg">Balance: {walletBalance} ETH</div>
+                    )}
                     <div className="flex items-center gap-4">
                         <Button
                             onClick={handleJoinGame}
