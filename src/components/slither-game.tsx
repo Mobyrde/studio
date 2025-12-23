@@ -40,8 +40,8 @@ const FOOD_RADIUS = 5;
 const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
 const PLAYER_SPEED = 3.1104;
-const BOOST_SPEED = 10.741248;
-const BOOST_SHRINK_DISTANCE = 10;
+const BOOST_SPEED = 12.8894976;
+const BOOST_SHRINK_DISTANCE = 25; // Increased from 10
 const STARTING_SNAKE_LENGTH = 10;
 const TURN_SPEED = 0.05;
 
@@ -312,7 +312,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       let playerDied = false;
 
       state.bots.forEach(bot => {
-        if (playerDied) return;
+        if (playerDied || !bot.body || bot.body.length === 0) return;
         const botHead = bot.body[0];
         const botRadius = BOT_SNAKE_RADIUS;
 
@@ -333,7 +333,6 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
         for (let i = 1; i < state.snake.length; i++) {
           if (checkCollision(botHead, state.snake[i], botRadius + playerRadius / 2)) {
             if (!killedBots.includes(bot.id)) {
-                setBalance(b => b + bot.balance);
                 state.food.push(...generateFood(Math.floor(bot.body.length / 2), botHead, bot.balance / (bot.body.length / 2) ));
                 killedBots.push(bot.id);
             }
