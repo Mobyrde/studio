@@ -19,6 +19,13 @@ const SERVERS: Server[] = [
     { name: 'Server 3', amount: 20 },
 ]
 
+declare global {
+  interface Window {
+    tronWeb: any;
+    ethereum: any;
+  }
+}
+
 const DamnBruhPage = () => {
   const [selectedServer, setSelectedServer] = useState<Server>(SERVERS[0]);
   const [gameStarted, setGameStarted] = useState(false);
@@ -52,34 +59,37 @@ const DamnBruhPage = () => {
   };
 
   const handleConnectWallet = async () => {
-    if (typeof window.ethereum !== 'undefined') {
+    if (window.tronWeb && window.tronWeb.ready) {
       try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const address = accounts[0];
+        const res = await window.tronWeb.request({ method: 'tron_requestAccounts' });
+        if (res.code !== 200) {
+            throw new Error(res.message);
+        }
+
+        const address = window.tronWeb.defaultAddress.base58;
         setWalletAddress(address);
 
-        const balanceHex = await window.ethereum.request({ method: 'eth_getBalance', params: [address, 'latest'] });
-        const balanceInWei = BigInt(balanceHex);
-        const balanceInEth = Number(balanceInWei) / 1e18;
-        setWalletBalance(balanceInEth.toFixed(4));
+        const balance = await window.tronWeb.trx.getBalance(address);
+        const balanceInTrx = window.tronWeb.fromSun(balance);
+        setWalletBalance(parseFloat(balanceInTrx).toFixed(2));
 
         toast({
           title: "Wallet Connected",
           description: `Connected with address: ${address.substring(0, 6)}...${address.substring(address.length - 4)}`,
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error("Wallet connection failed:", error);
         toast({
           variant: "destructive",
           title: "Connection Failed",
-          description: "Could not connect to the wallet. Please try again.",
+          description: error.message || "Could not connect to the wallet. Please try again.",
         });
       }
     } else {
       toast({
         variant: "destructive",
-        title: "No Wallet Detected",
-        description: "Please install a wallet like MetaMask or Trust Wallet.",
+        title: "No TRON Wallet Detected",
+        description: "Please install a TRON wallet like TronLink.",
       });
     }
   };
@@ -150,7 +160,7 @@ const DamnBruhPage = () => {
                         ))}
                     </div>
                      {walletAddress && walletBalance && (
-                        <div className="text-accent text-lg">Balance: {walletBalance} ETH</div>
+                        <div className="text-accent text-lg">Balance: {walletBalance} TRX</div>
                     )}
                     <div className="flex items-center gap-4">
                         <Button
