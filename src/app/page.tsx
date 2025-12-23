@@ -6,6 +6,7 @@ import SlitherGame from '@/components/slither-game';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 type Server = {
     name: string;
@@ -23,6 +24,8 @@ const DamnBruhPage = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [playerName, setPlayerName] = useState('');
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const handleLobbySelect = (server: Server) => {
     setSelectedServer(server);
@@ -46,6 +49,34 @@ const DamnBruhPage = () => {
     setSelectedServer(SERVERS[0]);
     setPlayerName('');
   };
+
+  const handleConnectWallet = async () => {
+    if (typeof window.ethereum !== 'undefined') {
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const address = accounts[0];
+        setWalletAddress(address);
+        toast({
+          title: "Wallet Connected",
+          description: `Connected with address: ${address.substring(0, 6)}...${address.substring(address.length - 4)}`,
+        });
+      } catch (error) {
+        console.error("Wallet connection failed:", error);
+        toast({
+          variant: "destructive",
+          title: "Connection Failed",
+          description: "Could not connect to the wallet. Please try again.",
+        });
+      }
+    } else {
+      toast({
+        variant: "destructive",
+        title: "No Wallet Detected",
+        description: "Please install a wallet like MetaMask or Trust Wallet.",
+      });
+    }
+  };
+
 
   if (gameStarted) {
     return (
@@ -120,9 +151,12 @@ const DamnBruhPage = () => {
                             Join Game
                         </Button>
                         <Button
+                            onClick={handleConnectWallet}
                             className="bg-transparent border-2 border-accent text-accent text-2xl font-bold py-4 px-12 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_20px] hover:shadow-accent"
                         >
-                            Connect Wallet
+                             {walletAddress
+                                ? `${walletAddress.substring(0, 4)}...${walletAddress.substring(walletAddress.length - 4)}`
+                                : 'Connect Wallet'}
                         </Button>
                     </div>
                 </>
