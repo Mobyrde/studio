@@ -20,6 +20,10 @@ type Bot = {
   turnTimer: number;
   balance: number;
 };
+type Server = {
+    name: string;
+    amount: number;
+}
 type GameState = {
   snake: Snake;
   direction: Position;
@@ -40,8 +44,8 @@ const BOT_SNAKE_RADIUS = 8;
 const FOOD_RADIUS = 5;
 const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
-const PLAYER_SPEED = 3.5;
-const BOOST_SPEED = 7;
+const PLAYER_SPEED = 2.5;
+const BOOST_SPEED = 3.5;
 const BOOST_SHRINK_DISTANCE = 50; 
 const STARTING_SNAKE_LENGTH = 10;
 const TURN_SPEED = 0.05;
@@ -50,7 +54,7 @@ let botIdCounter = 0;
 
 interface SlitherGameProps {
   onGameOver: () => void;
-  lobby: number;
+  server: Server;
   playerName: string;
 }
 
@@ -58,11 +62,11 @@ const getPlayerRadius = (length: number) => {
     return BASE_SNAKE_RADIUS + Math.log10(length) * 2;
 }
 
-const SlitherGame = ({ onGameOver, lobby, playerName }: SlitherGameProps) => {
+const SlitherGame = ({ onGameOver, server, playerName }: SlitherGameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameOverState, setGameOverState] = useState(false);
   const [score, setScore] = useState(0);
-  const [balance, setBalance] = useState(lobby);
+  const [balance, setBalance] = useState(server.amount);
   const [snakeLength, setSnakeLength] = useState(STARTING_SNAKE_LENGTH);
   const [highScore, setHighScore] = useState(0);
   const [isReady, setIsReady] = useState(false);
@@ -136,7 +140,7 @@ const SlitherGame = ({ onGameOver, lobby, playerName }: SlitherGameProps) => {
         speed: 2 + Math.random(),
         color: `hsl(${Math.random() * 360}, 60%, 50%)`,
         turnTimer: 0,
-        balance: lobby,
+        balance: server.amount,
       };
     };
 
@@ -155,10 +159,14 @@ const SlitherGame = ({ onGameOver, lobby, playerName }: SlitherGameProps) => {
         boostDistanceCounter: 0,
       };
       setSnakeLength(STARTING_SNAKE_LENGTH);
-      setBalance(lobby);
+      setBalance(server.amount);
       setScore(0);
       setGameOverState(false);
-      gameLoop();
+      
+      // Start the game loop if it's not already running.
+      if (!animationId) {
+        gameLoop();
+      }
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -246,7 +254,15 @@ const SlitherGame = ({ onGameOver, lobby, playerName }: SlitherGameProps) => {
               const shrinkAmount = Math.floor(state.boostDistanceCounter / BOOST_SHRINK_DISTANCE);
               for (let i = 0; i < shrinkAmount; i++) {
                   if (state.snake.length > STARTING_SNAKE_LENGTH) {
-                      state.snake.pop();
+                      const tail = state.snake.pop();
+                      if (tail) {
+                          state.food.push({
+                              x: tail.x,
+                              y: tail.y,
+                              color: foodColorsRef.current[Math.floor(Math.random() * foodColorsRef.current.length)],
+                              value: 0
+                          });
+                      }
                   }
               }
               setSnakeLength(state.snake.length);
@@ -281,11 +297,9 @@ const SlitherGame = ({ onGameOver, lobby, playerName }: SlitherGameProps) => {
 
       state.snake.unshift(newHead);
 
-      let ateFood = false;
       state.food = state.food.filter(f => {
         if (checkCollision(newHead, f, playerRadius + FOOD_RADIUS)) {
           state.growing += 1;
-          ateFood = true;
           setScore(s => s + 1);
           if (f.value > 0) {
             setBalance(b => b + f.value);
@@ -479,7 +493,7 @@ const SlitherGame = ({ onGameOver, lobby, playerName }: SlitherGameProps) => {
       canvas.removeEventListener('mouseup', handleMouseUp);
       cancelAnimationFrame(animationId);
     };
-  }, [isReady, lobby, playerName]);
+  }, [isReady, server, playerName]);
 
   useEffect(() => {
     if (score > highScore) {
@@ -503,6 +517,7 @@ const SlitherGame = ({ onGameOver, lobby, playerName }: SlitherGameProps) => {
   return (
     <div className="flex flex-col items-center justify-center">
       <div className="mb-4 flex flex-wrap justify-center gap-4 md:gap-8 text-foreground font-headline">
+        <div className="text-xl">Server: <span className="font-bold text-accent">{server.name}</span></div>
         <div className="text-xl">Length: <span className="font-bold text-primary">{snakeLength}</span></div>
         <div className="text-xl">Balance: <span className="font-bold text-yellow-400">${balance.toFixed(2)}</span></div>
         <div className="text-xl">Score: <span className="font-bold text-purple-400">{score}</span></div>

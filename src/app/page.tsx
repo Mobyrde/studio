@@ -7,18 +7,29 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
+type Server = {
+    name: string;
+    amount: number;
+}
+
+const SERVERS: Server[] = [
+    { name: 'Server 1', amount: 1 },
+    { name: 'Server 2', amount: 5 },
+    { name: 'Server 3', amount: 20 },
+]
+
 const DamnBruhPage = () => {
-  const [lobby, setLobby] = useState<number | null>(1);
+  const [selectedServer, setSelectedServer] = useState<Server>(SERVERS[0]);
   const [gameStarted, setGameStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [playerName, setPlayerName] = useState('');
 
-  const handleLobbySelect = (amount: number) => {
-    setLobby(amount);
+  const handleLobbySelect = (server: Server) => {
+    setSelectedServer(server);
   };
 
   const handleJoinGame = () => {
-    if (lobby !== null) {
+    if (selectedServer) {
       setGameOver(false);
       setGameStarted(true);
     }
@@ -32,14 +43,14 @@ const DamnBruhPage = () => {
   const handlePlayAgain = () => {
     setGameOver(false);
     setGameStarted(false); 
-    setLobby(1);
+    setSelectedServer(SERVERS[0]);
     setPlayerName('');
   };
 
   if (gameStarted) {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
-        <SlitherGame onGameOver={handleGameOver} lobby={lobby!} playerName={playerName} />
+        <SlitherGame onGameOver={handleGameOver} server={selectedServer} playerName={playerName} />
       </main>
     );
   }
@@ -85,24 +96,24 @@ const DamnBruhPage = () => {
                         className="w-80 bg-transparent text-center text-xl font-bold text-white border-2 border-muted-foreground focus:border-primary focus:ring-primary focus:shadow-[0_0_20px] focus:shadow-primary transition-all duration-300"
                     />
                     <div className="flex justify-center gap-4">
-                        {[1, 5, 20].map((amount) => (
+                        {SERVERS.map((server) => (
                         <Button
-                            key={amount}
-                            onClick={() => handleLobbySelect(amount)}
+                            key={server.name}
+                            onClick={() => handleLobbySelect(server)}
                             className={cn(
                             "bg-transparent border-2 text-xl font-bold py-6 px-8 rounded-lg transition-all duration-300 transform hover:scale-110",
-                            lobby === amount
+                            selectedServer.name === server.name
                                 ? "border-primary text-primary shadow-[0_0_20px] shadow-primary"
                                 : "border-muted-foreground text-muted-foreground hover:border-primary hover:text-primary"
                             )}
                         >
-                            ${amount}
+                            ${server.amount}
                         </Button>
                         ))}
                     </div>
                     <Button
                         onClick={handleJoinGame}
-                        disabled={lobby === null}
+                        disabled={!selectedServer}
                         className="bg-primary text-primary-foreground text-2xl font-bold py-4 px-12 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:scale-100 shadow-[0_0_30px] shadow-primary/70"
                     >
                         Join Game
