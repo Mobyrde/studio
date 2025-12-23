@@ -103,6 +103,13 @@ const DamnBruhPage = () => {
     setSelectedServer(SERVERS[0]);
     setPlayerName('');
   };
+  
+  const handleCashOut = () => {
+    toast({
+        title: "Coming Soon!",
+        description: "Cashing out will be enabled in a future update.",
+    });
+  }
 
   const handleConnectWallet = async () => {
     if (window.ethereum) {
@@ -258,7 +265,7 @@ const DamnBruhPage = () => {
                                 <div className="text-3xl font-bold text-accent">{walletBalance} <span className='text-lg'>MATIC</span></div>
                                 <div className="flex gap-2 mt-4">
                                      <Button disabled className="w-full bg-transparent border border-accent text-accent hover:bg-accent/10">Add Funds</Button>
-                                     <Button disabled className="w-full bg-transparent border border-muted-foreground text-muted-foreground">Cash Out</Button>
+                                     <Button onClick={handleCashOut} className="w-full bg-transparent border border-muted-foreground text-muted-foreground hover:border-accent hover:text-accent">Cash Out</Button>
                                 </div>
                             </CardContent>
                         </Card>
@@ -307,5 +314,3 @@ const DamnBruhPage = () => {
 };
 
 export default DamnBruhPage;
-
-    
