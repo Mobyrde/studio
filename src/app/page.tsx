@@ -21,7 +21,6 @@ const SERVERS: Server[] = [
 
 declare global {
   interface Window {
-    tronWeb: any;
     ethereum: any;
   }
 }
@@ -59,41 +58,81 @@ const DamnBruhPage = () => {
   };
 
   const handleConnectWallet = async () => {
-    if (window.tronWeb) {
-      try {
-        const res = await window.tronWeb.request({ method: 'tron_requestAccounts' });
-        if (res.code !== 200) {
-            throw new Error(res.message || 'Failed to connect to TronLink.');
+    if (window.ethereum) {
+        try {
+            // Request account access
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            const address = accounts[0];
+
+            // Check if the user is on the Polygon network
+            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+            const polygonChainId = '0x89'; // 137 in hex
+
+            if (chainId !== polygonChainId) {
+                try {
+                    // Request to switch to the Polygon network
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: polygonChainId }],
+                    });
+                } catch (switchError: any) {
+                    // This error code indicates that the chain has not been added to MetaMask.
+                    if (switchError.code === 4902) {
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [
+                                    {
+                                        chainId: polygonChainId,
+                                        chainName: 'Polygon Mainnet',
+                                        nativeCurrency: {
+                                            name: 'MATIC',
+                                            symbol: 'MATIC',
+                                            decimals: 18,
+                                        },
+                                        rpcUrls: ['https://polygon-rpc.com/'],
+                                        blockExplorerUrls: ['https://polygonscan.com/'],
+                                    },
+                                ],
+                            });
+                        } catch (addError) {
+                            throw new Error("Failed to add Polygon network to wallet.");
+                        }
+                    } else {
+                        throw new Error("Failed to switch to the Polygon network.");
+                    }
+                }
+            }
+
+            // Fetch balance
+            const balanceWei = await window.ethereum.request({
+                method: 'eth_getBalance',
+                params: [address, 'latest'],
+            });
+
+            // Convert balance from Wei to MATIC
+            const balanceMatic = parseFloat(balanceWei) / 10**18;
+            setWalletBalance(balanceMatic.toFixed(4));
+            setWalletAddress(address);
+
+            toast({
+                title: "Wallet Connected",
+                description: `Connected to Polygon with address: ${address.substring(0, 6)}...${address.substring(address.length - 4)}`,
+            });
+        } catch (error: any) {
+            console.error("Wallet connection failed:", error);
+            toast({
+                variant: "destructive",
+                title: "Connection Failed",
+                description: error.message || "Could not connect to the wallet. Please try again.",
+            });
         }
-
-        const address = window.tronWeb.defaultAddress.base58;
-        setWalletAddress(address);
-
-        const balanceSun = await window.tronWeb.trx.getBalance(address);
-        
-        // The balance is returned in SUN, which is 10^6 of a TRX.
-        // We convert it to TRX for display.
-        const balanceTrx = balanceSun / 1_000_000;
-        setWalletBalance(balanceTrx.toFixed(2));
-
-        toast({
-          title: "Wallet Connected",
-          description: `Connected with address: ${address.substring(0, 6)}...${address.substring(address.length - 4)}`,
-        });
-      } catch (error: any) {
-        console.error("Wallet connection failed:", error);
-        toast({
-          variant: "destructive",
-          title: "Connection Failed",
-          description: error.message || "Could not connect to the wallet. Please try again.",
-        });
-      }
     } else {
-      toast({
-        variant: "destructive",
-        title: "No TRON Wallet Detected",
-        description: "Please install a TRON wallet like TronLink.",
-      });
+        toast({
+            variant: "destructive",
+            title: "No EVM Wallet Detected",
+            description: "Please install a wallet like MetaMask or Trust Wallet.",
+        });
     }
   };
 
@@ -163,7 +202,7 @@ const DamnBruhPage = () => {
                         ))}
                     </div>
                      {walletAddress && walletBalance && (
-                        <div className="text-accent text-lg">Balance: {walletBalance} TRX</div>
+                        <div className="text-accent text-lg">Balance: {walletBalance} MATIC</div>
                     )}
                     <div className="flex items-center gap-4">
                         <Button
