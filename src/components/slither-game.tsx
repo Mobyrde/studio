@@ -40,7 +40,7 @@ const FOOD_RADIUS = 5;
 const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
 const PLAYER_SPEED = 3.1104;
-const BOOST_SPEED = 3.2223744;
+const BOOST_SPEED = 1.6111872;
 const BOOST_SHRINK_DISTANCE = 50;
 const STARTING_SNAKE_LENGTH = 10;
 const TURN_SPEED = 0.05;
@@ -231,11 +231,9 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       }
 
       const playerRadius = getPlayerRadius(state.snake.length);
-      let isBoosting = false;
-
+      
       // Handle boosting
       if (state.boosting && state.snake.length > STARTING_SNAKE_LENGTH) {
-          isBoosting = true;
           state.speed = BOOST_SPEED;
           state.boostDistanceCounter += state.speed;
           if (state.boostDistanceCounter >= BOOST_SHRINK_DISTANCE) {
@@ -296,7 +294,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
 
         if (state.growing > 0) {
           state.growing--;
-        } else if (!isBoosting) {
+        } else {
           state.snake.pop();
         }
         setSnakeLength(state.snake.length);
@@ -321,11 +319,6 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
         // Check if player's head hits a bot's body -> PLAYER DIES
         for (let i = 1; i < bot.body.length; i++) {
           if (checkCollision(playerHead, bot.body[i], playerRadius + botRadius / 2)) {
-             const originalBot = gameStateRef.current.bots.find(b => b.id === bot.id);
-            if (originalBot) {
-              originalBot.balance += balance;
-            }
-            setBalance(0);
             playerDied = true;
             return;
           }
@@ -338,13 +331,14 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
                 state.food.push(...generateFood(Math.floor(bot.body.length / 2), botHead, bot.balance / (bot.body.length / 2) ));
                 killedBots.push(bot.id);
             }
-            return; // Bot is dead, no need to check further for this bot
+            return;
           }
         }
       });
       
       if(playerDied) {
           state.food.push(...generateFood(Math.floor(state.snake.length / 2), playerHead, 0 ));
+          setBalance(0);
           state.snake = [];
           if(!gameOver) setGameOver(true);
           return;
@@ -518,3 +512,5 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
 };
 
 export default SlitherGame;
+
+    
