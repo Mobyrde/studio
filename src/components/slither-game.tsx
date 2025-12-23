@@ -54,6 +54,10 @@ interface SlitherGameProps {
   playerName: string;
 }
 
+const getPlayerRadius = (length: number) => {
+    return BASE_SNAKE_RADIUS + Math.log10(length) * 2;
+}
+
 const SlitherGame = ({ onGameOver, lobby, playerName }: SlitherGameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameOverState, setGameOverState] = useState(false);
@@ -157,8 +161,6 @@ const SlitherGame = ({ onGameOver, lobby, playerName }: SlitherGameProps) => {
       gameLoop();
     };
 
-    initGame();
-
     const handleMouseMove = (e: MouseEvent) => {
       if (gameStateRef.current.snake.length === 0) return;
       const rect = canvas.getBoundingClientRect();
@@ -221,10 +223,6 @@ const SlitherGame = ({ onGameOver, lobby, playerName }: SlitherGameProps) => {
       bot.body.pop();
     };
 
-    const getPlayerRadius = (length: number) => {
-        return BASE_SNAKE_RADIUS + Math.log10(length) * 2;
-    }
-
     function gameLoop() {
       if (!canvasRef.current) return;
       const state = gameStateRef.current;
@@ -248,11 +246,7 @@ const SlitherGame = ({ onGameOver, lobby, playerName }: SlitherGameProps) => {
               const shrinkAmount = Math.floor(state.boostDistanceCounter / BOOST_SHRINK_DISTANCE);
               for (let i = 0; i < shrinkAmount; i++) {
                   if (state.snake.length > STARTING_SNAKE_LENGTH) {
-                      if (state.growing > 0) {
-                          state.growing--;
-                      } else {
-                          state.snake.pop();
-                      }
+                      state.snake.pop();
                   }
               }
               setSnakeLength(state.snake.length);
@@ -306,13 +300,8 @@ const SlitherGame = ({ onGameOver, lobby, playerName }: SlitherGameProps) => {
       }
 
       if (state.growing > 0) {
-        if (ateFood) {
-          // Snake only grows when it eats
-          state.growing--;
-        } else if (!isBoosting) {
-           state.snake.pop();
-        }
-      } else if (!isBoosting) {
+        state.growing--;
+      } else {
         state.snake.pop();
       }
       setSnakeLength(state.snake.length);
@@ -481,6 +470,8 @@ const SlitherGame = ({ onGameOver, lobby, playerName }: SlitherGameProps) => {
       ctx.restore();
       animationId = requestAnimationFrame(gameLoop);
     };
+
+    initGame();
 
     return () => {
       canvas.removeEventListener('mousemove', handleMouseMove);
