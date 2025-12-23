@@ -207,7 +207,7 @@ const DamnBruhPage = () => {
                     <div className="flex items-center gap-4">
                         <Button
                             onClick={handleJoinGame}
-                            disabled={!selectedServer}
+                            disabled={!selectedServer || !walletAddress}
                             className="bg-primary text-primary-foreground text-2xl font-bold py-4 px-12 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:scale-100 shadow-[0_0_30px] shadow-primary/70"
                         >
                             Join Game
