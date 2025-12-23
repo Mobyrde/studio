@@ -40,7 +40,7 @@ const FOOD_RADIUS = 5;
 const BOT_COUNT = 8;
 const FOOD_COUNT = 200;
 const PLAYER_SPEED = 3.1104;
-const BOOST_SPEED = 6.2208; // Increased from 1.6111872
+const BOOST_SPEED = 6.2208;
 const BOOST_SHRINK_DISTANCE = 50;
 const STARTING_SNAKE_LENGTH = 10;
 const TURN_SPEED = 0.05;
@@ -293,17 +293,6 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
 
       if (state.growing > 0) {
         state.growing--;
-      } else if (state.snake.length > STARTING_SNAKE_LENGTH && state.boosting) {
-        // This is the main fix. We only shrink if not growing AND boosting.
-        // The check to pop is now correct.
-        state.snake.pop();
-      } else if (!state.boosting) {
-          // If not growing and not boosting, we should still pop to maintain length
-          state.snake.pop();
-      }
-       
-      if (state.growing > 0) {
-        state.growing--;
       } else {
         state.snake.pop();
       }
@@ -322,7 +311,7 @@ const SlitherGame = ({ onGameOver, lobby }: SlitherGameProps) => {
       let playerDied = false;
 
       state.bots.forEach(bot => {
-        if (playerDied || !bot.body || bot.body.length === 0) return;
+        if (!bot.body || bot.body.length === 0) return;
         const botHead = bot.body[0];
         const botRadius = BOT_SNAKE_RADIUS;
 
