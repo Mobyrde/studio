@@ -59,19 +59,21 @@ const DamnBruhPage = () => {
   };
 
   const handleConnectWallet = async () => {
-    if (window.tronWeb && window.tronWeb.ready) {
+    if (window.ethereum) {
       try {
-        const res = await window.tronWeb.request({ method: 'tron_requestAccounts' });
-        if (res.code !== 200) {
-            throw new Error(res.message);
-        }
-
-        const address = window.tronWeb.defaultAddress.base58;
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const address = accounts[0];
         setWalletAddress(address);
 
-        const balance = await window.tronWeb.trx.getBalance(address);
-        const balanceInTrx = window.tronWeb.fromSun(balance);
-        setWalletBalance(parseFloat(balanceInTrx).toFixed(2));
+        const balanceWei = await window.ethereum.request({
+          method: 'eth_getBalance',
+          params: [address, 'latest'],
+        });
+        
+        // The balance is returned in Wei, which is 10^18 of an ETH.
+        // We convert it to ETH for display.
+        const balanceEth = parseFloat(balanceWei) / 1e18;
+        setWalletBalance(balanceEth.toFixed(4));
 
         toast({
           title: "Wallet Connected",
@@ -88,8 +90,8 @@ const DamnBruhPage = () => {
     } else {
       toast({
         variant: "destructive",
-        title: "No TRON Wallet Detected",
-        description: "Please install a TRON wallet like TronLink.",
+        title: "No Wallet Detected",
+        description: "Please install a wallet like MetaMask or Trust Wallet.",
       });
     }
   };
@@ -160,7 +162,7 @@ const DamnBruhPage = () => {
                         ))}
                     </div>
                      {walletAddress && walletBalance && (
-                        <div className="text-accent text-lg">Balance: {walletBalance} TRX</div>
+                        <div className="text-accent text-lg">Balance: {walletBalance} ETH</div>
                     )}
                     <div className="flex items-center gap-4">
                         <Button
