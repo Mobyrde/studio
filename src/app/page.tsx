@@ -31,7 +31,7 @@ declare global {
   }
 }
 
-const DamnBruhPage = () => {
+const HomePage = () => {
   const [selectedServer, setSelectedServer] = useState<Server>(SERVERS[0]);
   const [gameStarted, setGameStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
@@ -340,3 +340,14 @@ const DamnBruhPage = () => {
                     className="bg-primary text-primary-foreground text-2xl font-bold py-4 px-12 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-[0_0_30px] shadow-primary/70"
                 >
                     Play Again
+                </Button>
+            )}
+        </div>
+      </div>
+    </main>
+  );
+};
+
+export default HomePage;
+
+    
