@@ -46,7 +46,10 @@ const HomePage = () => {
   };
 
   const handleJoinGame = async () => {
-    if (selectedServer && walletAddress) {
+    if (!selectedServer || !playerName) return;
+
+    if (walletAddress) {
+      // Wallet is connected, simulate transaction
       setIsProcessingTx(true);
       toast({
         title: "Transaction Sent",
@@ -55,24 +58,17 @@ const HomePage = () => {
 
       try {
         const amountInWei = (selectedServer.amount * 10**18).toString(16);
-        
-        // This is a simulated transaction.
-        // It asks the user to sign, but doesn't actually spend funds on a real mainnet.
-        // To make this a real transaction, you would need a smart contract address and ABI.
-        const txHash = await window.ethereum.request({
+        await window.ethereum.request({
           method: 'eth_sendTransaction',
           params: [
             {
               from: walletAddress,
               to: GAME_WALLET_ADDRESS, 
               value: `0x${amountInWei}`,
-              // 'data' would be the encoded function call to your smart contract
             },
           ],
         });
 
-        // In a real app, you'd wait for the transaction to be mined.
-        // We'll simulate that with a delay.
         setTimeout(() => {
           toast({
             title: "Transaction Confirmed!",
@@ -92,6 +88,14 @@ const HomePage = () => {
         });
         setIsProcessingTx(false);
       }
+    } else {
+      // No wallet, just start the game for testing
+      toast({
+        title: "Joining Game (Test Mode)",
+        description: "Wallet not connected. Starting game without stake.",
+      });
+      setGameOver(false);
+      setGameStarted(true);
     }
   };
   
@@ -318,7 +322,7 @@ const HomePage = () => {
                     <div className="flex items-center gap-4">
                         <Button
                             onClick={handleJoinGame}
-                            disabled={!selectedServer || !walletAddress || isProcessingTx || !playerName}
+                            disabled={!selectedServer || isProcessingTx || !playerName}
                             className="bg-primary text-primary-foreground text-2xl font-bold py-4 px-12 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:scale-100 shadow-[0_0_30px] shadow-primary/70"
                         >
                             {isProcessingTx ? 'Processing...' : 'Join Game'}
