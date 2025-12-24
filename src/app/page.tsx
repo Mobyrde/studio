@@ -8,6 +8,9 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import QRCode from 'qrcode.react';
+import { Copy } from 'lucide-react';
 
 type Server = {
     name: string;
@@ -190,6 +193,14 @@ const DamnBruhPage = () => {
     }
   };
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+        title: "Copied!",
+        description: "Wallet address copied to clipboard.",
+    });
+  }
+
 
   if (gameStarted) {
     return (
@@ -264,7 +275,31 @@ const DamnBruhPage = () => {
                             <CardContent>
                                 <div className="text-3xl font-bold text-accent">{walletBalance} <span className='text-lg'>MATIC</span></div>
                                 <div className="flex gap-2 mt-4">
-                                     <Button disabled className="w-full bg-transparent border border-accent text-accent hover:bg-accent/10">Add Funds</Button>
+                                     <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button className="w-full bg-transparent border border-accent text-accent hover:bg-accent/10">Add Funds</Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-[425px] bg-card border-accent text-foreground">
+                                            <DialogHeader>
+                                                <DialogTitle>Add Funds</DialogTitle>
+                                                <DialogDescription>
+                                                    Send funds to the game treasury address below.
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <div className="flex flex-col items-center gap-4 py-4">
+                                                <div className="p-4 bg-white rounded-lg">
+                                                    <QRCode value={GAME_WALLET_ADDRESS} size={200} />
+                                                </div>
+                                                <p className="text-center text-sm text-muted-foreground">Scan this code or copy the address below to send MATIC funds on the Polygon network.</p>
+                                                <div className="flex items-center gap-2 w-full p-2 rounded-md bg-background border border-input">
+                                                    <Input readOnly value={GAME_WALLET_ADDRESS} className="bg-transparent border-none text-sm truncate" />
+                                                    <Button variant="ghost" size="icon" onClick={() => copyToClipboard(GAME_WALLET_ADDRESS)}>
+                                                        <Copy className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </DialogContent>
+                                     </Dialog>
                                      <Button onClick={handleCashOut} className="w-full bg-transparent border border-muted-foreground text-muted-foreground hover:border-accent hover:text-accent">Cash Out</Button>
                                 </div>
                             </CardContent>
@@ -305,12 +340,3 @@ const DamnBruhPage = () => {
                     className="bg-primary text-primary-foreground text-2xl font-bold py-4 px-12 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-[0_0_30px] shadow-primary/70"
                 >
                     Play Again
-                </Button>
-            )}
-        </div>
-      </div>
-    </main>
-  );
-};
-
-export default DamnBruhPage;
